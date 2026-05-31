@@ -1,0 +1,141 @@
+// Prisma schema for the Soccer Academy application.
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  TRAINER
+  USER
+}
+
+enum RecurrenceType {
+  NONE
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+}
+
+enum SessionStatus {
+  SCHEDULED
+  CANCELLED
+  COMPLETED
+}
+
+enum RegistrationStatus {
+  REGISTERED
+  CANCELLED
+}
+
+model User {
+  id         String    @id @default(cuid())
+  name       String
+  email      String    @unique
+  role       Role      @default(USER)
+  active     Boolean   @default(true)
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  registrations   TrainingRegistration[]
+  trainerSessions TrainingTrainer[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+}
+
+model Category {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String?
+  active      Boolean @default(true)
+
+  users             User[]
+  trainingTemplates TrainingTemplate[]
+  trainingSessions  TrainingSession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TrainingTemplate {
+  id             String         @id @default(cuid())
+  title          String
+  description    String?
+  categoryId     String
+  category       Category       @relation(fields: [categoryId], references: [id])
+  location       String?
+  recurrenceType RecurrenceType @default(NONE)
+  startDate      DateTime
+  endDate        DateTime?
+  startTime      String
+  endTime        String
+  capacity       Int?
+  active         Boolean        @default(true)
+
+  sessions TrainingSession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+}
+
+model TrainingSession {
+  id          String            @id @default(cuid())
+  templateId  String?
+  template    TrainingTemplate? @relation(fields: [templateId], references: [id])
+  title       String
+  description String?
+  categoryId  String
+  category    Category          @relation(fields: [categoryId], references: [id])
+  location    String?
+  startsAt    DateTime
+  endsAt      DateTime
+  capacity    Int?
+  status      SessionStatus     @default(SCHEDULED)
+
+  trainers      TrainingTrainer[]
+  registrations TrainingRegistration[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([templateId])
+  @@index([startsAt])
+}
+
+model TrainingTrainer {
+  id                String          @id @default(cuid())
+  trainingSessionId String
+  trainingSession   TrainingSession @relation(fields: [trainingSessionId], references: [id], onDelete: Cascade)
+  trainerId         String
+  trainer           User            @relation(fields: [trainerId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([trainingSessionId, trainerId])
+  @@index([trainerId])
+}
+
+model TrainingRegistration {
+  id                String             @id @default(cuid())
+  trainingSessionId String
+  trainingSession   TrainingSession    @relation(fields: [trainingSessionId], references: [id], onDelete: Cascade)
+  userId            String
+  user              User               @relation(fields: [userId], references: [id])
+  status            RegistrationStatus @default(REGISTERED)
+  registeredAt      DateTime           @default(now())
+
+  @@unique([trainingSessionId, userId])
+  @@index([userId])
+}
