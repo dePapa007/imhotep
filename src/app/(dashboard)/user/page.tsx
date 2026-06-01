@@ -7,12 +7,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { requireRole } from "@/server/auth/dal";
 
 export const metadata: Metadata = {
   title: "My trainings",
 };
 
-export default function UserDashboardPage() {
+export default async function UserDashboardPage() {
+  await requireRole("USER");
+
   return (
     <div>
       <PageHeading

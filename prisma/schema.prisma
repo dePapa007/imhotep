@@ -35,13 +35,14 @@ enum RegistrationStatus {
 }
 
 model User {
-  id         String    @id @default(cuid())
-  name       String
-  email      String    @unique
-  role       Role      @default(USER)
-  active     Boolean   @default(true)
-  categoryId String?
-  category   Category? @relation(fields: [categoryId], references: [id])
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String?
+  role         Role      @default(USER)
+  active       Boolean   @default(true)
+  categoryId   String?
+  category     Category? @relation(fields: [categoryId], references: [id])
 
   registrations   TrainingRegistration[]
   trainerSessions TrainingTrainer[]

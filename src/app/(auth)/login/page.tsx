@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,7 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+
+import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = {
   title: "Log in",
@@ -29,32 +29,11 @@ export default function LoginPage() {
         <CardHeader>
           <CardTitle>Log in</CardTitle>
           <CardDescription>
-            Authentication is not wired up yet. This is a placeholder for Epic
-            2.
+            Enter your email and password to continue.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="flex flex-col gap-4">
-            <Input
-              label="Email"
-              name="email"
-              type="email"
-              placeholder="you@example.com"
-              autoComplete="email"
-              disabled
-            />
-            <Input
-              label="Password"
-              name="password"
-              type="password"
-              placeholder="********"
-              autoComplete="current-password"
-              disabled
-            />
-            <Button type="submit" disabled className="w-full">
-              Log in (coming soon)
-            </Button>
-          </form>
+          <LoginForm />
         </CardContent>
       </Card>
 

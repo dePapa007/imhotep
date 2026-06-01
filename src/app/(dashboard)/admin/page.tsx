@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
+import { requireRole } from "@/server/auth/dal";
 
 export const metadata: Metadata = {
   title: "Admin",
@@ -17,6 +18,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
+  await requireRole("ADMIN");
+
   const [users, categories, sessions] = await Promise.all([
     prisma.user.count(),
     prisma.category.count(),

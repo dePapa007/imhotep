@@ -6,15 +6,15 @@ This repository currently implements **Epic 1: Project Foundation & Architecture
 
 ## Tech stack
 
-| Area      | Choice                          |
-| --------- | ------------------------------- |
-| Framework | Next.js 16 (App Router)         |
-| Language  | TypeScript (strict)             |
-| Styling   | Tailwind CSS v4                 |
-| Database  | PostgreSQL 16 (Docker)          |
-| ORM       | Prisma 6                        |
-| Validation| Zod                             |
-| Tooling   | ESLint, Prettier                |
+| Area       | Choice                  |
+| ---------- | ----------------------- |
+| Framework  | Next.js 16 (App Router) |
+| Language   | TypeScript (strict)     |
+| Styling    | Tailwind CSS v4         |
+| Database   | PostgreSQL 16 (Docker)  |
+| ORM        | Prisma 6                |
+| Validation | Zod                     |
+| Tooling    | ESLint, Prettier        |
 
 ## Prerequisites
 
@@ -36,7 +36,10 @@ npm run db:up
 # 4. Apply database migrations + generate the Prisma client
 npm run db:migrate
 
-# 5. Start the dev server
+# 5. Seed accounts (admin + demo trainer/user)
+npm run db:seed
+
+# 6. Start the dev server
 npm run dev
 ```
 
@@ -44,20 +47,21 @@ The app runs at http://localhost:3000.
 
 ## Available scripts
 
-| Script                | Description                                  |
-| --------------------- | -------------------------------------------- |
-| `npm run dev`         | Start the development server                 |
-| `npm run build`       | Production build                             |
-| `npm run start`       | Run the production build                     |
-| `npm run lint`        | Run ESLint                                   |
-| `npm run typecheck`   | Type-check with `tsc --noEmit`               |
-| `npm run format`      | Format the codebase with Prettier            |
-| `npm run db:up`       | Start the PostgreSQL container               |
-| `npm run db:down`     | Stop the PostgreSQL container                |
+| Script                | Description                                    |
+| --------------------- | ---------------------------------------------- |
+| `npm run dev`         | Start the development server                   |
+| `npm run build`       | Production build                               |
+| `npm run start`       | Run the production build                       |
+| `npm run lint`        | Run ESLint                                     |
+| `npm run typecheck`   | Type-check with `tsc --noEmit`                 |
+| `npm run format`      | Format the codebase with Prettier              |
+| `npm run db:up`       | Start the PostgreSQL container                 |
+| `npm run db:down`     | Stop the PostgreSQL container                  |
 | `npm run db:migrate`  | Create/apply migrations (`prisma migrate dev`) |
-| `npm run db:reset`    | Reset the database                           |
-| `npm run db:studio`   | Open Prisma Studio                           |
-| `npm run db:generate` | Regenerate the Prisma client                 |
+| `npm run db:reset`    | Reset the database                             |
+| `npm run db:studio`   | Open Prisma Studio                             |
+| `npm run db:generate` | Regenerate the Prisma client                   |
+| `npm run db:seed`     | Seed admin + demo accounts                     |
 
 ## Project structure
 
@@ -83,6 +87,29 @@ src/
 prisma/
   schema.prisma      Database schema + migrations
 ```
+
+## Authentication & roles
+
+Custom session-based auth (no external service), following the Next.js 16 auth guide:
+
+- Passwords are hashed with `bcryptjs`.
+- A stateless JWT session (via `jose`) is stored in an HttpOnly cookie.
+- `src/proxy.ts` (Next 16's renamed middleware) does optimistic redirects: unauthenticated users are sent to `/login`, and users are kept within their role's area.
+- `src/server/auth/dal.ts` is the authoritative server-side layer. `getCurrentUser()` reads the user from the database (returning null for missing or inactive accounts), and `requireUser()` / `requireRole()` guard pages and server actions before any data is fetched.
+
+Roles and their home routes: `ADMIN` -> `/admin`, `TRAINER` -> `/trainer`, `USER` -> `/user`.
+
+### Demo accounts (after `npm run db:seed`)
+
+| Role    | Email                  | Password       |
+| ------- | ---------------------- | -------------- |
+| Admin   | `admin@academy.test`   | `ChangeMe123!` |
+| Trainer | `trainer@academy.test` | `ChangeMe123!` |
+| User    | `user@academy.test`    | `ChangeMe123!` |
+
+Admin email/password and the session secret are configured via `.env` (`ADMIN_*`, `SESSION_SECRET`). Change these before deploying.
+
+> Security note: the proxy performs optimistic cookie checks only. The database-backed checks in the DAL are the real enforcement and run before any sensitive data is queried, so authorization is enforced server-side rather than only in the UI.
 
 ## Database
 
