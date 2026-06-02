@@ -8,9 +8,22 @@ import { requireUser } from "@/server/auth/dal";
 import type { NavItem, Role } from "@/types";
 
 const navByRole: Record<Role, NavItem[]> = {
-  ADMIN: [{ label: "Home", href: "/admin" }],
-  TRAINER: [{ label: "Home", href: "/trainer" }],
-  USER: [{ label: "Home", href: "/user" }],
+  ADMIN: [
+    { label: "Home", href: "/admin" },
+    { label: "Users", href: "/admin/users" },
+    { label: "Trainers", href: "/admin/trainers" },
+    { label: "Categories", href: "/admin/categories" },
+    { label: "Trainings", href: "/admin/trainings" },
+  ],
+  TRAINER: [
+    { label: "Home", href: "/trainer" },
+    { label: "Schedule", href: "/trainer/schedule" },
+  ],
+  USER: [
+    { label: "Home", href: "/user" },
+    { label: "Browse", href: "/user/browse" },
+    { label: "My trainings", href: "/user/my-trainings" },
+  ],
 };
 
 const roleLabel: Record<Role, string> = {

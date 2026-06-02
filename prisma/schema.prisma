@@ -102,6 +102,7 @@ model TrainingSession {
   startsAt    DateTime
   endsAt      DateTime
   capacity    Int?
+  registrationDeadline DateTime?
   status      SessionStatus     @default(SCHEDULED)
 
   trainers      TrainingTrainer[]

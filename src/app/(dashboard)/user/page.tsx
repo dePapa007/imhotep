@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
+import { UserTrainingCard } from "@/components/user/user-training-card";
 import { PageHeading } from "@/components/layout/page-heading";
+import { buttonClasses } from "@/components/ui/button";
 import {
   Card,
   CardDescription,
@@ -8,28 +11,123 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { requireRole } from "@/server/auth/dal";
+import {
+  getNextRegisteredSession,
+  listAvailableSessionsForUser,
+} from "@/server/registrations/queries";
 
 export const metadata: Metadata = {
-  title: "My trainings",
+  title: "Home",
 };
 
-export default async function UserDashboardPage() {
-  await requireRole("USER");
+export const dynamic = "force-dynamic";
+
+const dateTimeFormat = new Intl.DateTimeFormat("en-GB", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+export default async function UserHomePage() {
+  const user = await requireRole("USER");
+
+  if (!user.categoryId) {
+    return (
+      <div>
+        <PageHeading
+          title="Welcome"
+          description="Your academy home for trainings and registrations."
+        />
+        <Card>
+          <CardHeader>
+            <CardTitle>No category assigned</CardTitle>
+            <CardDescription>
+              Ask an administrator to assign you to a category to see eligible
+              trainings.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
+  const [nextRegistered, available] = await Promise.all([
+    getNextRegisteredSession(user.id),
+    listAvailableSessionsForUser(user.id),
+  ]);
+  const preview = available.slice(0, 3);
 
   return (
     <div>
       <PageHeading
-        title="My trainings"
-        description="Placeholder area. Eligible trainings will appear here."
+        title={`Hi, ${user.name.split(" ")[0]}`}
+        description="Your upcoming trainings at a glance."
       />
-      <Card>
-        <CardHeader>
-          <CardTitle>Coming soon</CardTitle>
-          <CardDescription>
-            You will be able to browse and register for trainings here.
-          </CardDescription>
-        </CardHeader>
-      </Card>
+
+      <section className="mb-6">
+        <h2 className="mb-3 text-sm font-semibold">Next registered training</h2>
+        {nextRegistered ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>{nextRegistered.title}</CardTitle>
+              <CardDescription>
+                {dateTimeFormat.format(nextRegistered.startsAt)}
+              </CardDescription>
+            </CardHeader>
+            <div className="px-4 pb-4">
+              <Link
+                href={`/user/trainings/${nextRegistered.id}`}
+                className={buttonClasses({ variant: "outline", size: "sm" })}
+              >
+                View details
+              </Link>
+            </div>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>No registrations yet</CardTitle>
+              <CardDescription>
+                Browse available trainings to register for your next session.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        )}
+      </section>
+
+      <div className="mb-6 grid grid-cols-2 gap-3">
+        <Link href="/user/browse" className={buttonClasses()}>
+          Browse trainings
+        </Link>
+        <Link
+          href="/user/my-trainings"
+          className={buttonClasses({ variant: "outline" })}
+        >
+          My trainings
+        </Link>
+      </div>
+
+      <section>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold">Available trainings</h2>
+          <Link href="/user/browse" className="text-primary text-xs font-medium">
+            See all
+          </Link>
+        </div>
+        {preview.length === 0 ? (
+          <p className="text-muted-foreground text-sm">
+            No upcoming trainings in your category right now.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {preview.map((session) => (
+              <UserTrainingCard key={session.id} session={session} />
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
