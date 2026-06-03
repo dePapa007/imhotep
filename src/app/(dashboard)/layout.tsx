@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { AppLogo } from "@/components/layout/app-logo";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { Button } from "@/components/ui/button";
 import { roleHome } from "@/lib/roles";
@@ -43,12 +42,7 @@ export default async function DashboardLayout({
     <div className="flex min-h-dvh flex-col">
       <header className="border-border bg-card sticky top-0 z-40 border-b">
         <div className="mx-auto flex w-full max-w-md items-center justify-between px-5 py-3">
-          <Link
-            href={roleHome(user.role)}
-            className="font-semibold tracking-tight"
-          >
-            Soccer Academy
-          </Link>
+          <AppLogo href={roleHome(user.role)} size="sm" priority />
           <div className="flex items-center gap-3">
             <div className="flex flex-col items-end leading-tight">
               <span className="text-sm font-medium">{user.name}</span>

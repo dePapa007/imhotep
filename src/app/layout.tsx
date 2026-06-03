@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Soccer Academy",
-    template: "%s | Soccer Academy",
+    default: "Imhotep",
+    template: "%s | Imhotep",
   },
   description:
     "Register for soccer academy trainings. Built mobile-first for players, trainers, and admins.",

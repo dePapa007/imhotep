@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AppLogo } from "@/components/layout/app-logo";
 import {
   Card,
   CardContent,
@@ -18,11 +19,14 @@ export const metadata: Metadata = {
 export default function LoginPage() {
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-6 px-5 py-10">
-      <div className="flex flex-col gap-2 text-center">
-        <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
-        <p className="text-muted-foreground text-sm">
-          Log in to view your trainings.
-        </p>
+      <div className="flex flex-col items-center gap-4 text-center">
+        <AppLogo href="/" size="md" priority />
+        <div className="flex flex-col gap-2">
+          <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
+          <p className="text-muted-foreground text-sm">
+            Log in to view your trainings.
+          </p>
+        </div>
       </div>
 
       <Card>
