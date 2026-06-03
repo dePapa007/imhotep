@@ -148,8 +148,19 @@ See [`.env.example`](.env.example) for the full list. Notification-related vars:
 
 Production deploys to the VPS at `app.imfa.be` via GitHub Actions (`.github/workflows/deploy.yml`) and `scripts/deploy.sh` (PM2 + Next.js standalone output).
 
-- Set `DATABASE_URL`, `SESSION_SECRET`, and the notification env vars on the server.
-- The build runs `prisma generate` via `postinstall`. `scripts/deploy.sh` runs `prisma migrate deploy` on each deploy.
+Each deploy runs, in order:
+
+1. `npm ci --include=dev`
+2. `prisma migrate deploy` — apply pending migrations
+3. `prisma db seed` — idempotent; creates the admin account from `ADMIN_*` env vars if missing (does not reset existing passwords)
+4. `next build` + copy standalone assets and `.env`
+5. PM2 restart
+
+Place `.env` at `/var/www/app.imfa.be/.env` on the VPS. PM2 loads it via `env_file` in `ecosystem.config.js`; a copy is also placed in `.next/standalone/.env` for the Next.js runtime.
+
+**First login after deploy:** use the credentials from your `.env` seed vars (defaults: `admin@academy.test` / `ChangeMe123!` unless you changed `ADMIN_EMAIL` / `ADMIN_PASSWORD`). Change the admin password after first login.
+
+Required VPS env vars: `DATABASE_URL`, `SESSION_SECRET`, and notification vars if email is enabled.
 
 ### Resend setup (production)
 
