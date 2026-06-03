@@ -83,6 +83,7 @@ src/
     layout/          Shell pieces: bottom nav, page heading
   lib/               env (Zod), prisma client, utils (cn)
   server/            Server actions / data access (added in later epics)
+    notifications/   Resend email + dedupe ledger
   types/             Shared TypeScript types
 prisma/
   schema.prisma      Database schema + migrations
@@ -113,15 +114,56 @@ Admin email/password and the session secret are configured via `.env` (`ADMIN_*`
 
 ## Database
 
-The schema models the MVP domain: `User`, `Category`, `TrainingTemplate`, `TrainingSession`, `TrainingTrainer`, and `TrainingRegistration`. Recurring rules (`TrainingTemplate`) are stored separately from the individual sessions users register for (`TrainingSession`).
+The schema models the MVP domain: `User`, `Category`, `TrainingTemplate`, `TrainingSession`, `TrainingTrainer`, `TrainingRegistration`, and `NotificationLog` (email deduplication ledger).
 
 The `/admin` page reads live counts from the database to confirm the connection is working.
 
+## Email notifications
+
+Transactional email is sent via [Resend](https://resend.com) over HTTPS — no local mail server on the VPS is required.
+
+| Event | Recipients |
+| ----- | ---------- |
+| Registration | Member who registered |
+| Session cancelled | All registered members |
+| Trainer assigned | Newly assigned trainer |
+| Session full | All active admins |
+| Training reminder | Registered members + assigned trainers (cron) |
+
+Without `RESEND_API_KEY`, emails are logged to the console instead of sent (useful for local development). Each notification is recorded in `NotificationLog` with a unique dedupe key so the same event is never emailed twice.
+
+### Environment variables
+
+See [`.env.example`](.env.example) for the full list. Notification-related vars:
+
+| Variable | Required in prod | Description |
+| -------- | ---------------- | ----------- |
+| `RESEND_API_KEY` | Yes | Resend API key |
+| `EMAIL_FROM` | Yes | e.g. `Imhotep <noreply@imfa.be>` |
+| `APP_URL` | Yes | e.g. `https://app.imfa.be` (links in emails) |
+| `CRON_SECRET` | Yes | Protects `GET /api/cron/reminders` |
+| `REMINDER_HOURS_BEFORE` | No | Default `24` |
+
 ## Deployment
 
-The app is a standard Next.js project and can be deployed to Vercel, Railway, or Render.
+Production deploys to the VPS at `app.imfa.be` via GitHub Actions (`.github/workflows/deploy.yml`) and `scripts/deploy.sh` (PM2 + Next.js standalone output).
 
-- **Preview environments:** each pull request gets its own preview deployment (e.g. Vercel preview deployments).
-- **Production:** the default branch deploys to production.
-- Set `DATABASE_URL` as an environment variable in the hosting provider, pointing at a managed PostgreSQL instance.
-- The build runs `prisma generate` automatically via the `postinstall` script. Run `prisma migrate deploy` against the production database as part of the release step.
+- Set `DATABASE_URL`, `SESSION_SECRET`, and the notification env vars on the server.
+- The build runs `prisma generate` via `postinstall`. `scripts/deploy.sh` runs `prisma migrate deploy` on each deploy.
+
+### Resend setup (production)
+
+1. Create a Resend account and API key.
+2. Add and verify the `imfa.be` domain in Resend; publish the SPF/DKIM DNS records Resend provides.
+3. Set `EMAIL_FROM` to an address on that domain (e.g. `Imhotep <noreply@imfa.be>`).
+4. Set `RESEND_API_KEY`, `APP_URL`, and `CRON_SECRET` in the VPS environment (alongside existing secrets).
+
+### Training reminder cron
+
+Add an hourly crontab entry on the VPS (replace the secret with your `CRON_SECRET` value):
+
+```bash
+0 * * * * curl -sf -H "Authorization: Bearer YOUR_CRON_SECRET" https://app.imfa.be/api/cron/reminders
+```
+
+The endpoint sends reminders for sessions starting in the next `REMINDER_HOURS_BEFORE` hours (default 24), using a 1-hour window so hourly cron does not double-send.

@@ -13,6 +13,12 @@ import {
   type TrainingFormState,
 } from "@/lib/validators/training";
 import { requireRole } from "@/server/auth/dal";
+import {
+  notifyRegistrationConfirmation,
+  notifySessionCancelled,
+  notifyTrainerAssigned,
+  notifyTrainerAssignments,
+} from "@/server/notifications/dispatch";
 
 function formArray(formData: FormData, key: string): string[] {
   return formData.getAll(key).map(String);
@@ -62,6 +68,8 @@ export async function createTraining(
     registrationDeadlineHours: data.registrationDeadlineHours,
   });
 
+  const trainerAssignments: { sessionId: string; trainerId: string }[] = [];
+
   await prisma.$transaction(async (tx) => {
     let templateId: string | null = null;
 
@@ -87,7 +95,7 @@ export async function createTraining(
     }
 
     for (const occurrence of occurrences) {
-      await tx.trainingSession.create({
+      const session = await tx.trainingSession.create({
         data: {
           templateId,
           title: data.title,
@@ -102,9 +110,18 @@ export async function createTraining(
             create: data.trainerIds.map((trainerId) => ({ trainerId })),
           },
         },
+        select: { id: true },
       });
+
+      for (const trainerId of data.trainerIds) {
+        trainerAssignments.push({ sessionId: session.id, trainerId });
+      }
     }
   });
+
+  if (trainerAssignments.length > 0) {
+    notifyTrainerAssignments(trainerAssignments);
+  }
 
   revalidatePath("/admin/trainings");
   redirect("/admin/trainings");
@@ -153,6 +170,14 @@ export async function updateSession(
         )
       : null;
 
+  const existingTrainers = await prisma.trainingTrainer.findMany({
+    where: { trainingSessionId: id },
+    select: { trainerId: true },
+  });
+  const previousTrainerIds = new Set(
+    existingTrainers.map((row) => row.trainerId),
+  );
+
   await prisma.$transaction(async (tx) => {
     await tx.trainingTrainer.deleteMany({ where: { trainingSessionId: id } });
     await tx.trainingSession.update({
@@ -173,6 +198,13 @@ export async function updateSession(
     });
   });
 
+  const addedTrainerIds = data.trainerIds.filter(
+    (trainerId) => !previousTrainerIds.has(trainerId),
+  );
+  notifyTrainerAssignments(
+    addedTrainerIds.map((trainerId) => ({ sessionId: id, trainerId })),
+  );
+
   revalidatePath("/admin/trainings");
   revalidatePath(`/admin/trainings/${id}`);
   redirect(`/admin/trainings/${id}`);
@@ -184,6 +216,7 @@ export async function cancelSession(id: string): Promise<void> {
     where: { id },
     data: { status: "CANCELLED" },
   });
+  notifySessionCancelled(id);
   revalidatePath("/admin/trainings");
   revalidatePath(`/admin/trainings/${id}`);
 }
@@ -266,6 +299,12 @@ export async function addRegistration(
 
   revalidatePath("/admin/trainings");
   revalidatePath(`/admin/trainings/${sessionId}`);
+  notifyRegistrationConfirmation(
+    sessionId,
+    userId,
+    session._count.registrations,
+    session.capacity,
+  );
   return {};
 }
 
@@ -312,6 +351,8 @@ export async function addTrainerToSession(
   await prisma.trainingTrainer.create({
     data: { trainingSessionId: sessionId, trainerId },
   });
+
+  notifyTrainerAssigned(sessionId, trainerId);
 
   revalidatePath("/admin/trainings");
   revalidatePath(`/admin/trainings/${sessionId}`);

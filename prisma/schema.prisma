@@ -34,6 +34,24 @@ enum RegistrationStatus {
   CANCELLED
 }
 
+enum NotificationType {
+  REGISTRATION_CONFIRMATION
+  SESSION_CANCELLED
+  TRAINER_ASSIGNED
+  TRAINING_REMINDER
+  SESSION_FULL_ADMIN
+}
+
+model NotificationLog {
+  id             String           @id @default(cuid())
+  type           NotificationType
+  dedupeKey      String           @unique
+  recipientEmail String
+  sentAt         DateTime         @default(now())
+
+  @@index([type, sentAt])
+}
+
 model User {
   id           String    @id @default(cuid())
   name         String

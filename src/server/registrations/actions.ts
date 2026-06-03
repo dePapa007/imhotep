@@ -8,6 +8,7 @@ import {
 } from "@/lib/registration-eligibility";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/server/auth/dal";
+import { notifyRegistrationConfirmation } from "@/server/notifications/dispatch";
 
 export interface ActionResult {
   error?: string;
@@ -83,6 +84,12 @@ export async function registerForSession(
   }
 
   revalidateUserPaths(sessionId);
+  notifyRegistrationConfirmation(
+    sessionId,
+    user.id,
+    session._count.registrations,
+    session.capacity,
+  );
   return {};
 }
 
