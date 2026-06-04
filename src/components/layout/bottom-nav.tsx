@@ -6,12 +6,18 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { NavItem } from "@/types";
 
-export function BottomNav({ items }: { items: NavItem[] }) {
+export function BottomNav({
+  items,
+  ariaLabel,
+}: {
+  items: NavItem[];
+  ariaLabel: string;
+}) {
   const pathname = usePathname();
 
   return (
     <nav
-      aria-label="Main navigation"
+      aria-label={ariaLabel}
       className="border-border bg-card sticky bottom-0 z-40 border-t pb-[env(safe-area-inset-bottom)]"
     >
       <ul className="mx-auto flex w-full max-w-md items-stretch">

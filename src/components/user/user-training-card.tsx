@@ -3,22 +3,25 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { buttonClasses } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { createTranslator } from "@/i18n/get-messages";
+import { formatDateShort, formatTime } from "@/i18n/format";
+import type { Locale } from "@/i18n/locales";
 import type { UserSessionItem } from "@/server/registrations/queries";
 
-const dateFormat = new Intl.DateTimeFormat("en-GB", {
-  weekday: "short",
-  day: "numeric",
-  month: "short",
-});
-const timeFormat = new Intl.DateTimeFormat("en-GB", {
-  hour: "2-digit",
-  minute: "2-digit",
-});
-
-export function UserTrainingCard({ session }: { session: UserSessionItem }) {
+export function UserTrainingCard({
+  session,
+  locale,
+}: {
+  session: UserSessionItem;
+  locale: Locale;
+}) {
+  const t = createTranslator(locale);
   const capacityLabel = session.capacity
-    ? `${session._count.registrations} / ${session.capacity} registered`
-    : `${session._count.registrations} registered`;
+    ? t("session.registeredCapacity", {
+        count: session._count.registrations,
+        capacity: session.capacity,
+      })
+    : t("session.registered", { count: session._count.registrations });
 
   return (
     <Card>
@@ -26,13 +29,13 @@ export function UserTrainingCard({ session }: { session: UserSessionItem }) {
         <Link href={`/user/trainings/${session.id}`} className="flex flex-col gap-1">
           <p className="font-medium">{session.title}</p>
           <p className="text-muted-foreground text-sm">
-            {dateFormat.format(session.startsAt)}{" "}
-            {timeFormat.format(session.startsAt)} -{" "}
-            {timeFormat.format(session.endsAt)}
+            {formatDateShort(session.startsAt, locale)}{" "}
+            {formatTime(session.startsAt, locale)} -{" "}
+            {formatTime(session.endsAt, locale)}
           </p>
           {session.location ? (
             <p className="text-muted-foreground text-sm">
-              Location: {session.location}
+              {t("common.locationLabel")}: {session.location}
             </p>
           ) : null}
           <p className="text-muted-foreground text-xs">{capacityLabel}</p>
@@ -40,12 +43,12 @@ export function UserTrainingCard({ session }: { session: UserSessionItem }) {
         <div className="flex items-center gap-2">
           {session.isRegistered ? (
             <>
-              <Badge variant="success">Registered</Badge>
+              <Badge variant="success">{t("user.registered")}</Badge>
               <Link
                 href={`/user/trainings/${session.id}`}
                 className={buttonClasses({ variant: "outline", size: "sm" })}
               >
-                View
+                {t("common.view")}
               </Link>
             </>
           ) : (
@@ -53,7 +56,7 @@ export function UserTrainingCard({ session }: { session: UserSessionItem }) {
               href={`/user/trainings/${session.id}`}
               className={buttonClasses({ size: "sm" })}
             >
-              Register
+              {t("user.register")}
             </Link>
           )}
         </div>

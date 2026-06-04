@@ -1,20 +1,25 @@
 import { UserTrainingCard } from "@/components/user/user-training-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { createTranslator } from "@/i18n/get-messages";
+import type { Locale } from "@/i18n/locales";
 import { groupSessionsByDay } from "@/lib/date-groups";
 import type { UserSessionItem } from "@/server/registrations/queries";
 
 export function AvailableSessionsList({
   sessions,
+  locale,
 }: {
   sessions: UserSessionItem[];
+  locale: Locale;
 }) {
-  const groups = groupSessionsByDay(sessions);
+  const t = createTranslator(locale);
+  const groups = groupSessionsByDay(sessions, locale);
 
   if (groups.length === 0) {
     return (
       <EmptyState
-        title="No trainings available"
-        description="There are no upcoming trainings in your category right now. Check back later."
+        title={t("user.noTrainingsAvailableTitle")}
+        description={t("user.noTrainingsAvailableDesc")}
       />
     );
   }
@@ -28,7 +33,11 @@ export function AvailableSessionsList({
           </h2>
           <div className="flex flex-col gap-3">
             {group.sessions.map((session) => (
-              <UserTrainingCard key={session.id} session={session} />
+              <UserTrainingCard
+                key={session.id}
+                session={session}
+                locale={locale}
+              />
             ))}
           </div>
         </section>

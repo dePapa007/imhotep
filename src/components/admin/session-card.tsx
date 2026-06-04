@@ -2,17 +2,10 @@ import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { createTranslator } from "@/i18n/get-messages";
+import { formatDateShort, formatTime } from "@/i18n/format";
+import type { Locale } from "@/i18n/locales";
 import type { SessionListItem } from "@/server/trainings/queries";
-
-const dateFormat = new Intl.DateTimeFormat("en-GB", {
-  weekday: "short",
-  day: "numeric",
-  month: "short",
-});
-const timeFormat = new Intl.DateTimeFormat("en-GB", {
-  hour: "2-digit",
-  minute: "2-digit",
-});
 
 const statusVariant = {
   SCHEDULED: "success",
@@ -20,37 +13,45 @@ const statusVariant = {
   COMPLETED: "muted",
 } as const;
 
-const statusLabel = {
-  SCHEDULED: "Scheduled",
-  CANCELLED: "Cancelled",
-  COMPLETED: "Completed",
-} as const;
-
 export function SessionCard({
   session,
   href,
   compact = false,
+  locale,
 }: {
   session: SessionListItem;
   href?: string;
   compact?: boolean;
+  locale: Locale;
 }) {
+  const t = createTranslator(locale);
+  const statusLabel = {
+    SCHEDULED: t("admin.statusScheduled"),
+    CANCELLED: t("admin.statusCancelled"),
+    COMPLETED: t("admin.statusCompleted"),
+  } as const;
+
   const trainerNames = session.trainers
-    .map((t) => t.trainer.name)
+    .map((tr) => tr.trainer.name)
     .join(", ");
   const capacityLabel = session.capacity
-    ? `${session._count.registrations} / ${session.capacity} registered`
-    : `${session._count.registrations} registered`;
+    ? t("session.registeredCapacity", {
+        count: session._count.registrations,
+        capacity: session.capacity,
+      })
+    : t("session.registered", { count: session._count.registrations });
 
   const body = compact ? (
     <CardContent className="flex flex-col gap-1 p-4">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-medium">
-            {timeFormat.format(session.startsAt)} - {session.title}
+            {formatTime(session.startsAt, locale)} - {session.title}
           </p>
           <p className="text-muted-foreground text-xs">
-            {trainerNames ? `Trainer: ${trainerNames}` : "No trainer assigned"}
+            {trainerNames
+              ? `${t("session.trainer")}: ${trainerNames}`
+              : t("session.noTrainerAssigned")}
           </p>
           <p className="text-muted-foreground text-xs">{capacityLabel}</p>
         </div>
@@ -64,9 +65,9 @@ export function SessionCard({
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-muted-foreground text-xs">
-            {dateFormat.format(session.startsAt)} -{" "}
-            {timeFormat.format(session.startsAt)}-
-            {timeFormat.format(session.endsAt)}
+            {formatDateShort(session.startsAt, locale)} -{" "}
+            {formatTime(session.startsAt, locale)}-
+            {formatTime(session.endsAt, locale)}
           </p>
           <p className="font-medium">{session.title}</p>
         </div>
@@ -83,7 +84,9 @@ export function SessionCard({
         ) : null}
       </div>
       <p className="text-muted-foreground text-xs">
-        {trainerNames ? `Trainers: ${trainerNames}` : "No trainers assigned"}
+        {trainerNames
+          ? `${t("session.trainers")}: ${trainerNames}`
+          : t("session.noTrainerAssigned")}
       </p>
       <p className="text-muted-foreground text-xs">{capacityLabel}</p>
     </CardContent>

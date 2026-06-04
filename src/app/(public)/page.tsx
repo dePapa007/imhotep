@@ -8,38 +8,40 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { createTranslator } from "@/i18n/get-messages";
+import { resolveLocale } from "@/i18n/resolve-locale";
 
-const highlights = [
-  {
-    title: "Browse trainings",
-    description: "See sessions that match your category, on any device.",
-  },
-  {
-    title: "Register in one tap",
-    description: "Join or cancel trainings from your phone in seconds.",
-  },
-  {
-    title: "Stay organized",
-    description: "Trainers and admins keep every session up to date.",
-  },
-];
+export default async function LandingPage() {
+  const locale = await resolveLocale();
+  const t = createTranslator(locale);
 
-export default function LandingPage() {
+  const highlights = [
+    {
+      title: t("landing.highlightBrowseTitle"),
+      description: t("landing.highlightBrowseDesc"),
+    },
+    {
+      title: t("landing.highlightRegisterTitle"),
+      description: t("landing.highlightRegisterDesc"),
+    },
+    {
+      title: t("landing.highlightOrganizedTitle"),
+      description: t("landing.highlightOrganizedDesc"),
+    },
+  ];
+
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-8 px-5 py-10">
       <header className="flex flex-col gap-4">
         <AppLogo href="/" size="lg" priority />
         <div className="flex flex-col gap-3">
           <h1 className="text-3xl leading-tight font-bold tracking-tight">
-            Train more. Manage less.
+            {t("landing.tagline")}
           </h1>
-          <p className="text-muted-foreground">
-            A mobile-first home for academy trainings. Players register, trainers
-            track attendance, and admins stay in control.
-          </p>
+          <p className="text-muted-foreground">{t("landing.intro")}</p>
           <div className="mt-2 flex flex-col gap-3 sm:flex-row">
             <Link href="/login" className={buttonClasses()}>
-              Log in
+              {t("auth.loginTitle")}
             </Link>
           </div>
         </div>
@@ -57,7 +59,7 @@ export default function LandingPage() {
       </section>
 
       <footer className="text-muted-foreground mt-auto pt-6 text-center text-sm">
-        Built with Next.js. Mobile-first by design.
+        {t("landing.footer")}
       </footer>
     </main>
   );

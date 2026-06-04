@@ -10,28 +10,26 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { createTranslator } from "@/i18n/get-messages";
+import { formatDateTimeMedium } from "@/i18n/format";
 import { requireRole } from "@/server/auth/dal";
 import {
   getNextAssignedSession,
   listAssignedSessions,
 } from "@/server/trainer/queries";
 
-export const metadata: Metadata = {
-  title: "Trainer",
-};
-
 export const dynamic = "force-dynamic";
 
-const dateTimeFormat = new Intl.DateTimeFormat("en-GB", {
-  weekday: "short",
-  day: "numeric",
-  month: "short",
-  hour: "2-digit",
-  minute: "2-digit",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const user = await requireRole("TRAINER");
+  const t = createTranslator(user.preferredLocale);
+  return { title: t("trainer.homeTitle") };
+}
 
 export default async function TrainerDashboardPage() {
   const user = await requireRole("TRAINER");
+  const t = createTranslator(user.preferredLocale);
+  const locale = user.preferredLocale;
 
   const [nextSession, upcoming] = await Promise.all([
     getNextAssignedSession(user.id),
@@ -42,18 +40,18 @@ export default async function TrainerDashboardPage() {
   return (
     <div>
       <PageHeading
-        title={`Hi, ${user.name.split(" ")[0]}`}
-        description="Your assigned trainings at a glance."
+        title={t("user.hi", { name: user.name.split(" ")[0]! })}
+        description={t("trainer.homeSubtitle")}
       />
 
       <section className="mb-6">
-        <h2 className="mb-3 text-sm font-semibold">Next training</h2>
+        <h2 className="mb-3 text-sm font-semibold">{t("trainer.nextTraining")}</h2>
         {nextSession ? (
           <Card>
             <CardHeader>
               <CardTitle>{nextSession.title}</CardTitle>
               <CardDescription>
-                {dateTimeFormat.format(nextSession.startsAt)}
+                {formatDateTimeMedium(nextSession.startsAt, locale)}
                 {nextSession.location ? ` · ${nextSession.location}` : ""}
               </CardDescription>
             </CardHeader>
@@ -62,32 +60,34 @@ export default async function TrainerDashboardPage() {
                 href={`/trainer/trainings/${nextSession.id}`}
                 className={buttonClasses({ variant: "outline", size: "sm" })}
               >
-                View details
+                {t("user.viewDetails")}
               </Link>
             </div>
           </Card>
         ) : (
           <Card>
             <CardHeader>
-              <CardTitle>No upcoming trainings</CardTitle>
-              <CardDescription>
-                You are not assigned to any upcoming sessions yet.
-              </CardDescription>
+              <CardTitle>{t("trainer.noUpcomingTitle")}</CardTitle>
+              <CardDescription>{t("trainer.noUpcomingDesc")}</CardDescription>
             </CardHeader>
           </Card>
         )}
       </section>
 
       <Link href="/trainer/schedule" className={`${buttonClasses()} mb-6`}>
-        View full schedule
+        {t("trainer.viewFullSchedule")}
       </Link>
 
       {preview.length > 0 ? (
         <section>
-          <h2 className="mb-3 text-sm font-semibold">Coming up</h2>
+          <h2 className="mb-3 text-sm font-semibold">{t("trainer.comingUp")}</h2>
           <div className="flex flex-col gap-3">
             {preview.map((session) => (
-              <TrainerSessionCard key={session.id} session={session} />
+              <TrainerSessionCard
+                key={session.id}
+                session={session}
+                locale={locale}
+              />
             ))}
           </div>
         </section>

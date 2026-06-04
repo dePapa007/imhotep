@@ -1,14 +1,10 @@
+import type { Locale, Role } from "@prisma/client";
+
+import { createTranslator } from "@/i18n/get-messages";
 import { getAppUrl } from "@/lib/env";
 import { roleHome } from "@/lib/roles";
-import type { Role } from "@prisma/client";
 
 import { formatSessionDateTime } from "./format";
-
-const roleLabel: Record<Role, string> = {
-  ADMIN: "Admin",
-  TRAINER: "Trainer",
-  USER: "Member",
-};
 
 export interface SessionEmailContext {
   id: string;
@@ -18,23 +14,27 @@ export interface SessionEmailContext {
   categoryName: string;
 }
 
-function sessionDetails(session: SessionEmailContext) {
+function sessionDetails(session: SessionEmailContext, locale: Locale) {
+  const t = createTranslator(locale);
   const lines = [
-    `Training: ${session.title}`,
-    `When: ${formatSessionDateTime(session.startsAt)}`,
-    `Category: ${session.categoryName}`,
+    `${t("email.training")}: ${session.title}`,
+    `${t("email.when")}: ${formatSessionDateTime(session.startsAt, locale)}`,
+    `${t("email.category")}: ${session.categoryName}`,
   ];
-  if (session.location) lines.push(`Location: ${session.location}`);
+  if (session.location) {
+    lines.push(`${t("email.location")}: ${session.location}`);
+  }
   return lines;
 }
 
-function wrapHtml(body: string) {
+function wrapHtml(body: string, locale: Locale) {
+  const t = createTranslator(locale);
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="${locale}">
 <body style="font-family:system-ui,sans-serif;line-height:1.5;color:#0f172a;max-width:32rem;margin:0 auto;padding:1.5rem">
   <p style="margin:0 0 1rem"><img src="${getAppUrl()}/imhotep-logo.svg" alt="Imhotep" width="120" height="100" style="height:2.5rem;width:auto" /></p>
   ${body}
-  <p style="margin-top:2rem;font-size:0.875rem;color:#64748b">Imhotep Soccer Academy</p>
+  <p style="margin-top:2rem;font-size:0.875rem;color:#64748b">${escapeHtml(t("email.footer"))}</p>
 </body>
 </html>`;
 }
@@ -46,25 +46,28 @@ function linkHtml(href: string, label: string) {
 export function registrationConfirmationEmail(
   name: string,
   session: SessionEmailContext,
+  locale: Locale,
 ) {
+  const t = createTranslator(locale);
   const url = `${getAppUrl()}/user/trainings/${session.id}`;
-  const details = sessionDetails(session);
+  const details = sessionDetails(session, locale);
   return {
-    subject: `Registered: ${session.title}`,
+    subject: t("email.registrationSubject", { title: session.title }),
     text: [
-      `Hi ${name},`,
+      t("email.hi", { name }),
       "",
-      "You're registered for the following training:",
+      t("email.registrationIntro"),
       "",
       ...details,
       "",
-      `View details: ${url}`,
+      `${t("email.viewTraining")}: ${url}`,
     ].join("\n"),
     html: wrapHtml(
-      `<p>Hi ${escapeHtml(name)},</p>
-<p>You're registered for the following training:</p>
+      `<p>${escapeHtml(t("email.hi", { name }))}</p>
+<p>${escapeHtml(t("email.registrationIntro"))}</p>
 <ul>${details.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>
-${linkHtml(url, "View training")}`,
+${linkHtml(url, escapeHtml(t("email.viewTraining")))}`,
+      locale,
     ),
   };
 }
@@ -72,21 +75,24 @@ ${linkHtml(url, "View training")}`,
 export function sessionCancelledEmail(
   name: string,
   session: SessionEmailContext,
+  locale: Locale,
 ) {
-  const details = sessionDetails(session);
+  const t = createTranslator(locale);
+  const details = sessionDetails(session, locale);
   return {
-    subject: `Cancelled: ${session.title}`,
+    subject: t("email.sessionCancelledSubject", { title: session.title }),
     text: [
-      `Hi ${name},`,
+      t("email.hi", { name }),
       "",
-      "The following training has been cancelled:",
+      t("email.sessionCancelledIntro"),
       "",
       ...details,
     ].join("\n"),
     html: wrapHtml(
-      `<p>Hi ${escapeHtml(name)},</p>
-<p>The following training has been <strong>cancelled</strong>:</p>
+      `<p>${escapeHtml(t("email.hi", { name }))}</p>
+<p>${escapeHtml(t("email.sessionCancelledIntro"))}</p>
 <ul>${details.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>`,
+      locale,
     ),
   };
 }
@@ -94,25 +100,28 @@ export function sessionCancelledEmail(
 export function trainerAssignedEmail(
   name: string,
   session: SessionEmailContext,
+  locale: Locale,
 ) {
+  const t = createTranslator(locale);
   const url = `${getAppUrl()}/trainer/trainings/${session.id}`;
-  const details = sessionDetails(session);
+  const details = sessionDetails(session, locale);
   return {
-    subject: `Assigned: ${session.title}`,
+    subject: t("email.trainerAssignedSubject", { title: session.title }),
     text: [
-      `Hi ${name},`,
+      t("email.hi", { name }),
       "",
-      "You've been assigned to the following training:",
+      t("email.trainerAssignedIntro"),
       "",
       ...details,
       "",
-      `View details: ${url}`,
+      `${t("email.viewTraining")}: ${url}`,
     ].join("\n"),
     html: wrapHtml(
-      `<p>Hi ${escapeHtml(name)},</p>
-<p>You've been assigned to the following training:</p>
+      `<p>${escapeHtml(t("email.hi", { name }))}</p>
+<p>${escapeHtml(t("email.trainerAssignedIntro"))}</p>
 <ul>${details.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>
-${linkHtml(url, "View training")}`,
+${linkHtml(url, escapeHtml(t("email.viewTraining")))}`,
+      locale,
     ),
   };
 }
@@ -121,28 +130,31 @@ export function trainingReminderEmail(
   name: string,
   session: SessionEmailContext,
   role: "member" | "trainer",
+  locale: Locale,
 ) {
+  const t = createTranslator(locale);
   const url =
     role === "trainer"
       ? `${getAppUrl()}/trainer/trainings/${session.id}`
       : `${getAppUrl()}/user/trainings/${session.id}`;
-  const details = sessionDetails(session);
+  const details = sessionDetails(session, locale);
   return {
-    subject: `Reminder: ${session.title}`,
+    subject: t("email.reminderSubject", { title: session.title }),
     text: [
-      `Hi ${name},`,
+      t("email.hi", { name }),
       "",
-      "This is a reminder that the following training starts soon:",
+      t("email.reminderIntro"),
       "",
       ...details,
       "",
-      `View details: ${url}`,
+      `${t("email.viewTraining")}: ${url}`,
     ].join("\n"),
     html: wrapHtml(
-      `<p>Hi ${escapeHtml(name)},</p>
-<p>This is a reminder that the following training starts soon:</p>
+      `<p>${escapeHtml(t("email.hi", { name }))}</p>
+<p>${escapeHtml(t("email.reminderIntro"))}</p>
 <ul>${details.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>
-${linkHtml(url, "View training")}`,
+${linkHtml(url, escapeHtml(t("email.viewTraining")))}`,
+      locale,
     ),
   };
 }
@@ -152,25 +164,28 @@ export function sessionFullAdminEmail(
   session: SessionEmailContext,
   registeredCount: number,
   capacity: number,
+  locale: Locale,
 ) {
+  const t = createTranslator(locale);
   const url = `${getAppUrl()}/admin/trainings/${session.id}`;
-  const details = sessionDetails(session);
+  const details = sessionDetails(session, locale);
   return {
-    subject: `Session full: ${session.title}`,
+    subject: t("email.sessionFullSubject", { title: session.title }),
     text: [
-      `Hi ${adminName},`,
+      t("email.hi", { name: adminName }),
       "",
-      `A training session is now full (${registeredCount}/${capacity}):`,
+      t("email.sessionFullIntro", { count: registeredCount, capacity }),
       "",
       ...details,
       "",
-      `Manage session: ${url}`,
+      `${t("email.manageSession")}: ${url}`,
     ].join("\n"),
     html: wrapHtml(
-      `<p>Hi ${escapeHtml(adminName)},</p>
-<p>A training session is now full (<strong>${registeredCount}/${capacity}</strong>):</p>
+      `<p>${escapeHtml(t("email.hi", { name: adminName }))}</p>
+<p>${escapeHtml(t("email.sessionFullIntro", { count: registeredCount, capacity }))}</p>
 <ul>${details.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>
-${linkHtml(url, "Manage session")}`,
+${linkHtml(url, escapeHtml(t("email.manageSession")))}`,
+      locale,
     ),
   };
 }
@@ -181,42 +196,48 @@ export function userWelcomeEmail({
   password,
   role,
   categoryName,
+  locale,
 }: {
   name: string;
   email: string;
   password: string;
   role: Role;
   categoryName?: string | null;
+  locale: Locale;
 }) {
+  const t = createTranslator(locale);
   const loginUrl = `${getAppUrl()}/login`;
   const dashboardUrl = `${getAppUrl()}${roleHome(role)}`;
-  const roleText = roleLabel[role];
+  const roleText = t(`roles.${role}`);
   const accountLines = [
-    `Email: ${email}`,
-    `Password: ${password}`,
-    `Role: ${roleText}`,
+    `${t("email.emailLabel")}: ${email}`,
+    `${t("email.passwordLabel")}: ${password}`,
+    `${t("email.roleLabel")}: ${roleText}`,
   ];
-  if (categoryName) accountLines.push(`Category: ${categoryName}`);
+  if (categoryName) {
+    accountLines.push(`${t("email.categoryLabel")}: ${categoryName}`);
+  }
 
   return {
-    subject: "Welcome to Imhotep Soccer Academy",
+    subject: t("email.welcomeSubject"),
     text: [
-      `Hi ${name},`,
+      t("email.hi", { name }),
       "",
-      "An account has been created for you. Use these credentials to log in:",
+      t("email.welcomeIntro"),
       "",
       ...accountLines,
       "",
-      `Log in: ${loginUrl}`,
+      `${t("email.logIn")}: ${loginUrl}`,
       "",
-      "Keep this email private and change your password after your first login if possible.",
+      t("email.welcomePrivate"),
     ].join("\n"),
     html: wrapHtml(
-      `<p>Hi ${escapeHtml(name)},</p>
-<p>An account has been created for you. Use these credentials to log in:</p>
+      `<p>${escapeHtml(t("email.hi", { name }))}</p>
+<p>${escapeHtml(t("email.welcomeIntro"))}</p>
 <ul>${accountLines.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>
-${linkHtml(loginUrl, "Log in")}
-<p style="font-size:0.875rem;color:#64748b">Keep this email private. After login you will land on ${escapeHtml(dashboardUrl)}.</p>`,
+${linkHtml(loginUrl, escapeHtml(t("email.logIn")))}
+<p style="font-size:0.875rem;color:#64748b">${escapeHtml(t("email.welcomeLandOn", { url: dashboardUrl }))}</p>`,
+      locale,
     ),
   };
 }

@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
+import { useTranslations } from "@/i18n/locale-provider";
 import {
   addRegistrationFromForm,
   type ActionResult,
@@ -22,6 +23,7 @@ export function AddRegistrationForm({
   eligibleUsers: EligibleUser[];
   disabled: boolean;
 }) {
+  const t = useTranslations();
   const action = addRegistrationFromForm.bind(null, sessionId);
   const [state, formAction, pending] = useActionState(action, initialState);
 
@@ -29,11 +31,11 @@ export function AddRegistrationForm({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Add member</CardTitle>
+          <CardTitle>{t("admin.addMember")}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground text-sm">
-            Cannot add members to a cancelled training or when at capacity.
+            {t("admin.cannotAddMembers")}
           </p>
         </CardContent>
       </Card>
@@ -48,19 +50,19 @@ export function AddRegistrationForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Add member</CardTitle>
+        <CardTitle>{t("admin.addMember")}</CardTitle>
       </CardHeader>
       <CardContent>
         {eligibleUsers.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            No eligible members available for this category.
+            {t("admin.noEligibleMembers")}
           </p>
         ) : (
           <form action={formAction} className="flex flex-col gap-3">
             <Select
               name="userId"
               options={options}
-              placeholder="Select a member"
+              placeholder={t("forms.selectMember")}
               required
             />
             {state.error ? (
@@ -69,7 +71,7 @@ export function AddRegistrationForm({
               </p>
             ) : null}
             <Button type="submit" disabled={pending} size="sm">
-              {pending ? "Adding…" : "Add user"}
+              {pending ? t("forms.adding") : t("forms.addUser")}
             </Button>
           </form>
         )}

@@ -1,22 +1,27 @@
 import { FilterLinkTabs } from "@/components/ui/filter-link-tabs";
+import { createTranslator } from "@/i18n/get-messages";
+import type { Locale } from "@/i18n/locales";
 import type { ReportRangeType } from "@/lib/report-range";
-
-const ranges: { value: ReportRangeType; label: string }[] = [
-  { value: "week", label: "Week" },
-  { value: "month", label: "Month" },
-  { value: "season", label: "Season" },
-  { value: "all", label: "All" },
-];
 
 export function ReportRangeTabs({
   basePath,
   currentRange,
   defaultRange = "month",
+  locale,
 }: {
   basePath: string;
   currentRange: ReportRangeType;
   defaultRange?: ReportRangeType;
+  locale: Locale;
 }) {
+  const t = createTranslator(locale);
+  const ranges: { value: ReportRangeType; label: string }[] = [
+    { value: "week", label: t("common.week") },
+    { value: "month", label: t("common.month") },
+    { value: "season", label: t("common.season") },
+    { value: "all", label: t("common.all") },
+  ];
+
   return (
     <FilterLinkTabs
       basePath={basePath}
@@ -24,7 +29,7 @@ export function ReportRangeTabs({
       options={ranges}
       currentValue={currentRange}
       defaultValue={defaultRange}
-      ariaLabel="Report period"
+      ariaLabel={t("common.filterPeriod")}
     />
   );
 }

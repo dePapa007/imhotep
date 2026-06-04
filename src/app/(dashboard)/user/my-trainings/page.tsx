@@ -8,31 +8,33 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { createTranslator } from "@/i18n/get-messages";
 import { requireRole } from "@/server/auth/dal";
 import { listRegisteredSessionsForUser } from "@/server/registrations/queries";
 
-export const metadata: Metadata = {
-  title: "My trainings",
-};
-
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const user = await requireRole("USER");
+  const t = createTranslator(user.preferredLocale);
+  return { title: t("user.myTrainingsTitle") };
+}
 
 export default async function UserMyTrainingsPage() {
   const user = await requireRole("USER");
+  const t = createTranslator(user.preferredLocale);
 
   if (!user.categoryId) {
     return (
       <div>
         <PageHeading
-          title="My trainings"
-          description="Your upcoming registered sessions."
+          title={t("user.myTrainingsTitle")}
+          description={t("user.myTrainingsDescription")}
         />
         <Card>
           <CardHeader>
-            <CardTitle>No category assigned</CardTitle>
-            <CardDescription>
-              Ask an administrator to assign you to a category first.
-            </CardDescription>
+            <CardTitle>{t("user.noCategoryTitle")}</CardTitle>
+            <CardDescription>{t("user.noCategoryDesc")}</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -44,10 +46,13 @@ export default async function UserMyTrainingsPage() {
   return (
     <div>
       <PageHeading
-        title="My trainings"
-        description="Sessions you are registered for."
+        title={t("user.myTrainingsTitle")}
+        description={t("user.myTrainingsDescription")}
       />
-      <RegisteredSessionsList sessions={sessions} />
+      <RegisteredSessionsList
+        sessions={sessions}
+        locale={user.preferredLocale}
+      />
     </div>
   );
 }

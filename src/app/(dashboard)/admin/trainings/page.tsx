@@ -3,6 +3,7 @@ import type { SessionStatus } from "@prisma/client";
 
 import { SessionsList } from "@/components/admin/sessions-list";
 import { PageHeading } from "@/components/layout/page-heading";
+import { createTranslator } from "@/i18n/get-messages";
 import {
   getRangeBounds,
   RANGE_VALUES,
@@ -10,10 +11,6 @@ import {
 } from "@/lib/date-groups";
 import type { ListSessionsFilters } from "@/server/trainings/queries";
 import { requireRole } from "@/server/auth/dal";
-
-export const metadata: Metadata = {
-  title: "Training calendar",
-};
 
 export const dynamic = "force-dynamic";
 
@@ -28,8 +25,15 @@ interface PageProps {
   }>;
 }
 
+export async function generateMetadata(): Promise<Metadata> {
+  const user = await requireRole("ADMIN");
+  const t = createTranslator(user.preferredLocale);
+  return { title: t("admin.calendarTitle") };
+}
+
 export default async function AdminTrainingsPage({ searchParams }: PageProps) {
-  await requireRole("ADMIN");
+  const user = await requireRole("ADMIN");
+  const t = createTranslator(user.preferredLocale);
   const params = await searchParams;
 
   const range: RangeType =
@@ -51,12 +55,13 @@ export default async function AdminTrainingsPage({ searchParams }: PageProps) {
   return (
     <div>
       <PageHeading
-        title="Training calendar"
-        description="View and manage all scheduled trainings."
+        title={t("admin.calendarTitle")}
+        description={t("admin.calendarDescription")}
       />
       <SessionsList
         filters={filters}
         range={range}
+        locale={user.preferredLocale}
         preservedParams={{
           category: params.category,
           trainer: params.trainer,

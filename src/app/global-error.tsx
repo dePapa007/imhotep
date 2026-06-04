@@ -1,6 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+
+import { createTranslator } from "@/i18n/get-messages";
+import { defaultLocale, isLocale, type Locale } from "@/i18n/locales";
+
+function usePageLocale(): Locale {
+  if (typeof document === "undefined") return defaultLocale;
+  const lang = document.documentElement.lang;
+  return isLocale(lang) ? lang : defaultLocale;
+}
 
 export default function GlobalError({
   error,
@@ -9,12 +18,15 @@ export default function GlobalError({
   error: Error & { digest?: string };
   unstable_retry: () => void;
 }) {
+  const locale = usePageLocale();
+  const t = useMemo(() => createTranslator(locale), [locale]);
+
   useEffect(() => {
     console.error(error);
   }, [error]);
 
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body
         style={{
           margin: 0,
@@ -33,10 +45,10 @@ export default function GlobalError({
         }}
       >
         <h1 style={{ fontSize: "1.25rem", fontWeight: 600, margin: 0 }}>
-          Something went wrong
+          {t("common.errorTitle")}
         </h1>
         <p style={{ color: "#64748b", fontSize: "0.875rem", margin: 0 }}>
-          A critical error occurred. Please try again.
+          {t("common.errorCritical")}
         </p>
         <button
           type="button"
@@ -53,7 +65,7 @@ export default function GlobalError({
             cursor: "pointer",
           }}
         >
-          Try again
+          {t("common.tryAgain")}
         </button>
       </body>
     </html>

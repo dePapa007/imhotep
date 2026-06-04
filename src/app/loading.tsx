@@ -1,6 +1,11 @@
 import { AppLogo } from "@/components/layout/app-logo";
+import { createTranslator } from "@/i18n/get-messages";
+import { resolveLocale } from "@/i18n/resolve-locale";
 
-export default function Loading() {
+export default async function Loading() {
+  const locale = await resolveLocale();
+  const t = createTranslator(locale);
+
   return (
     <div
       role="status"
@@ -9,7 +14,7 @@ export default function Loading() {
     >
       <AppLogo size="md" />
       <span className="border-muted border-t-primary size-8 animate-spin rounded-full border-2 motion-reduce:animate-none" />
-      <span className="sr-only">Loading…</span>
+      <span className="sr-only">{t("common.loading")}</span>
     </div>
   );
 }

@@ -1,4 +1,3 @@
-import { attendanceStatusLabel } from "@/lib/attendance";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -7,16 +6,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { createTranslator } from "@/i18n/get-messages";
+import { formatDateTimeMedium } from "@/i18n/format";
+import type { Locale } from "@/i18n/locales";
 import type { AttendanceHistoryItem } from "@/server/attendance/queries";
-
-const dateTimeFormat = new Intl.DateTimeFormat("en-GB", {
-  weekday: "short",
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-});
+import type { AttendanceStatus } from "@prisma/client";
 
 const statusBadgeVariant = {
   UNMARKED: "muted",
@@ -26,21 +20,28 @@ const statusBadgeVariant = {
 
 export function UserAttendanceHistory({
   items,
+  locale,
 }: {
   items: AttendanceHistoryItem[];
+  locale: Locale;
 }) {
+  const t = createTranslator(locale);
+  const statusLabel = {
+    UNMARKED: t("admin.attendanceUnmarked"),
+    PRESENT: t("admin.attendancePresent"),
+    ABSENT: t("admin.attendanceAbsent"),
+  } as Record<AttendanceStatus, string>;
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Attendance history</CardTitle>
-        <CardDescription>
-          Past trainings this member was registered for.
-        </CardDescription>
+        <CardTitle>{t("admin.attendanceHistory")}</CardTitle>
+        <CardDescription>{t("admin.attendanceHistoryDesc")}</CardDescription>
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            No past trainings yet.
+            {t("admin.noPastTrainingsMember")}
           </p>
         ) : (
           <ul className="flex flex-col gap-3">
@@ -55,13 +56,14 @@ export function UserAttendanceHistory({
                       {item.trainingSession.title}
                     </p>
                     <p className="text-muted-foreground text-xs">
-                      {dateTimeFormat.format(item.trainingSession.startsAt)}
+                      {formatDateTimeMedium(
+                        item.trainingSession.startsAt,
+                        locale,
+                      )}
                     </p>
                   </div>
-                  <Badge
-                    variant={statusBadgeVariant[item.attendanceStatus]}
-                  >
-                    {attendanceStatusLabel[item.attendanceStatus]}
+                  <Badge variant={statusBadgeVariant[item.attendanceStatus]}>
+                    {statusLabel[item.attendanceStatus]}
                   </Badge>
                 </div>
                 {item.attendanceNotes ? (

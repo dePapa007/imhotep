@@ -6,6 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/password";
 import { roleHome } from "@/lib/roles";
+import { setLocaleCookie } from "@/i18n/resolve-locale";
 import { createSession, deleteSession } from "@/lib/session";
 
 const loginSchema = z.object({
@@ -13,8 +14,10 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+export type LoginErrorKey = "invalidCredentials" | "accountInactive";
+
 export interface LoginState {
-  error?: string;
+  errorKey?: LoginErrorKey;
   fieldErrors?: {
     email?: string[];
     password?: string[];
@@ -41,23 +44,25 @@ export async function login(
     select: {
       id: true,
       role: true,
+      preferredLocale: true,
       active: true,
       passwordHash: true,
     },
   });
 
   // Generic message avoids leaking which accounts exist.
-  const invalid: LoginState = { error: "Invalid email or password." };
+  const invalid: LoginState = { errorKey: "invalidCredentials" };
 
   if (!user || !user.passwordHash) return invalid;
   if (!user.active) {
-    return { error: "This account is inactive. Contact an administrator." };
+    return { errorKey: "accountInactive" };
   }
 
   const passwordValid = await verifyPassword(password, user.passwordHash);
   if (!passwordValid) return invalid;
 
   await createSession({ userId: user.id, role: user.role });
+  await setLocaleCookie(user.preferredLocale);
   redirect(roleHome(user.role));
 }
 

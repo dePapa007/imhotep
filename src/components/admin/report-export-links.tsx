@@ -1,13 +1,21 @@
 import { buttonClasses } from "@/components/ui/button";
+import { createTranslator } from "@/i18n/get-messages";
+import type { Locale } from "@/i18n/locales";
 import type { ReportRangeType } from "@/lib/report-range";
 
-const exports = [
-  { label: "Export trainings", href: "/api/admin/export/trainings" },
-  { label: "Export users", href: "/api/admin/export/users" },
-  { label: "Export attendance", href: "/api/admin/export/attendance" },
-] as const;
-
-export function ReportExportLinks({ range }: { range: ReportRangeType }) {
+export function ReportExportLinks({
+  range,
+  locale,
+}: {
+  range: ReportRangeType;
+  locale: Locale;
+}) {
+  const t = createTranslator(locale);
+  const exports = [
+    { label: t("admin.exportTrainings"), href: "/api/admin/export/trainings" },
+    { label: t("admin.exportUsers"), href: "/api/admin/export/users" },
+    { label: t("admin.exportAttendance"), href: "/api/admin/export/attendance" },
+  ] as const;
   const query = range === "month" ? "" : `?range=${range}`;
 
   return (

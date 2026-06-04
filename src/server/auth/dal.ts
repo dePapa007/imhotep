@@ -3,7 +3,7 @@ import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import type { Role } from "@prisma/client";
+import type { Locale, Role } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { roleHome } from "@/lib/roles";
@@ -14,6 +14,7 @@ export interface SessionUser {
   name: string;
   email: string;
   role: Role;
+  preferredLocale: Locale;
   active: boolean;
   categoryId: string | null;
 }
@@ -39,6 +40,7 @@ export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
       name: true,
       email: true,
       role: true,
+      preferredLocale: true,
       active: true,
       categoryId: true,
     },

@@ -6,7 +6,6 @@ import { AttendanceList } from "@/components/attendance/attendance-list";
 import { AddRegistrationForm } from "@/components/admin/add-registration-form";
 import { RegistrationList } from "@/components/admin/registration-list";
 import {
-  attendanceSectionMessage,
   canEditAttendance,
   showAttendanceSection,
 } from "@/lib/attendance";
@@ -16,6 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeading } from "@/components/layout/page-heading";
+import { createTranslator } from "@/i18n/get-messages";
+import { formatDateTime } from "@/i18n/format";
 import { requireRole } from "@/server/auth/dal";
 import { cancelSession, restoreSession } from "@/server/trainings/actions";
 import {
@@ -24,19 +25,7 @@ import {
   listEligibleUsersForSession,
 } from "@/server/trainings/queries";
 
-export const metadata: Metadata = {
-  title: "Training detail",
-};
-
 export const dynamic = "force-dynamic";
-
-const dateTimeFormat = new Intl.DateTimeFormat("en-GB", {
-  weekday: "long",
-  day: "numeric",
-  month: "long",
-  hour: "2-digit",
-  minute: "2-digit",
-});
 
 const statusVariant = {
   SCHEDULED: "success",
@@ -48,8 +37,16 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+export async function generateMetadata(): Promise<Metadata> {
+  const user = await requireRole("ADMIN");
+  const t = createTranslator(user.preferredLocale);
+  return { title: t("admin.trainingDetail") };
+}
+
 export default async function TrainingDetailPage({ params }: PageProps) {
-  await requireRole("ADMIN");
+  const admin = await requireRole("ADMIN");
+  const t = createTranslator(admin.preferredLocale);
+  const locale = admin.preferredLocale;
   const { id } = await params;
 
   const [session, eligibleUsers, trainers] = await Promise.all([
@@ -59,6 +56,12 @@ export default async function TrainingDetailPage({ params }: PageProps) {
   ]);
 
   if (!session) notFound();
+
+  const statusLabel = {
+    SCHEDULED: t("admin.statusScheduled"),
+    CANCELLED: t("admin.statusCancelled"),
+    COMPLETED: t("admin.statusCompleted"),
+  } as const;
 
   const isCancelled = session.status === "CANCELLED";
   const atCapacity =
@@ -70,20 +73,20 @@ export default async function TrainingDetailPage({ params }: PageProps) {
     <div>
       <PageHeading
         title={session.title}
-        description={dateTimeFormat.format(session.startsAt)}
+        description={formatDateTime(session.startsAt, locale)}
       />
 
       <Card>
         <CardContent className="flex flex-col gap-3 p-4">
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge variant={statusVariant[session.status]}>
-              {session.status}
+              {statusLabel[session.status]}
             </Badge>
             <Badge variant="primary">{session.category.name}</Badge>
             {session.templateId ? (
-              <Badge variant="muted">Recurring</Badge>
+              <Badge variant="muted">{t("admin.recurring")}</Badge>
             ) : (
-              <Badge variant="muted">One-time</Badge>
+              <Badge variant="muted">{t("admin.oneTime")}</Badge>
             )}
           </div>
           {session.description ? (
@@ -91,23 +94,25 @@ export default async function TrainingDetailPage({ params }: PageProps) {
           ) : null}
           <dl className="text-muted-foreground grid grid-cols-1 gap-1 text-sm">
             <div>
-              <span className="font-medium">Ends: </span>
-              {dateTimeFormat.format(session.endsAt)}
+              <span className="font-medium">{t("admin.ends")}: </span>
+              {formatDateTime(session.endsAt, locale)}
             </div>
             {session.location ? (
               <div>
-                <span className="font-medium">Location: </span>
+                <span className="font-medium">{t("common.locationLabel")}: </span>
                 {session.location}
               </div>
             ) : null}
             <div>
-              <span className="font-medium">Capacity: </span>
-              {session.capacity ?? "Unlimited"}
+              <span className="font-medium">{t("forms.capacity")}: </span>
+              {session.capacity ?? t("admin.unlimited")}
             </div>
             {session.registrationDeadline ? (
               <div>
-                <span className="font-medium">Registration closes: </span>
-                {dateTimeFormat.format(session.registrationDeadline)}
+                <span className="font-medium">
+                  {t("admin.registrationClosesLabel")}:{" "}
+                </span>
+                {formatDateTime(session.registrationDeadline, locale)}
               </div>
             ) : null}
           </dl>
@@ -119,18 +124,18 @@ export default async function TrainingDetailPage({ params }: PageProps) {
           href={`/admin/trainings/${session.id}/edit`}
           className={buttonClasses()}
         >
-          Edit training
+          {t("admin.editTraining")}
         </Link>
         {isCancelled ? (
           <form action={restoreSession.bind(null, session.id)}>
             <Button type="submit" variant="secondary">
-              Restore
+              {t("admin.restoreTraining")}
             </Button>
           </form>
         ) : (
           <form action={cancelSession.bind(null, session.id)}>
             <Button type="submit" variant="destructive">
-              Cancel training
+              {t("admin.cancelTraining")}
             </Button>
           </form>
         )}
@@ -142,13 +147,17 @@ export default async function TrainingDetailPage({ params }: PageProps) {
           assigned={session.trainers}
           availableTrainers={trainers}
         />
-        <RegistrationList session={session} />
+        <RegistrationList session={session} locale={locale} />
         {showAttendanceSection(session) ? (
           <AttendanceList
             sessionId={session.id}
             registrations={session.registrations}
             canEdit={canEditAttendance(session)}
-            lockedMessage={attendanceSectionMessage(session)}
+            lockedMessage={
+              canEditAttendance(session)
+                ? null
+                : t("admin.attendanceAfterStart")
+            }
             saveAction={saveSessionAttendanceFromForm}
           />
         ) : null}

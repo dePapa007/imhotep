@@ -1,11 +1,7 @@
-const dateTimeFormat = new Intl.DateTimeFormat("en-GB", {
-  weekday: "long",
-  day: "numeric",
-  month: "long",
-  hour: "2-digit",
-  minute: "2-digit",
-});
+import type { Locale } from "@prisma/client";
 
-export function formatSessionDateTime(date: Date) {
-  return dateTimeFormat.format(date);
+import { formatDateTime } from "@/i18n/format";
+
+export function formatSessionDateTime(date: Date, locale: Locale) {
+  return formatDateTime(date, locale);
 }

@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslations } from "@/i18n/locale-provider";
 import type { CategoryFormState } from "@/lib/validators/category";
 
 export interface CategoryFormDefaults {
@@ -25,12 +26,13 @@ interface CategoryFormProps {
 const initialState: CategoryFormState = {};
 
 export function CategoryForm({ action, mode, defaults }: CategoryFormProps) {
+  const t = useTranslations();
   const [state, formAction, pending] = useActionState(action, initialState);
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <Input
-        label="Name"
+        label={t("forms.name")}
         name="name"
         type="text"
         required
@@ -38,9 +40,9 @@ export function CategoryForm({ action, mode, defaults }: CategoryFormProps) {
         error={state.fieldErrors?.name?.[0]}
       />
       <Textarea
-        label="Description"
+        label={t("forms.description")}
         name="description"
-        placeholder="Optional details about this category"
+        placeholder={t("forms.optionalCategoryDetails")}
         defaultValue={defaults?.description ?? ""}
         error={state.fieldErrors?.description?.[0]}
       />
@@ -52,7 +54,7 @@ export function CategoryForm({ action, mode, defaults }: CategoryFormProps) {
             defaultChecked={defaults?.active ?? true}
             className="border-input h-4 w-4 rounded"
           />
-          Active
+          {t("common.active")}
         </label>
       ) : null}
       {state.error ? (
@@ -62,10 +64,10 @@ export function CategoryForm({ action, mode, defaults }: CategoryFormProps) {
       ) : null}
       <Button type="submit" disabled={pending} className="w-full">
         {pending
-          ? "Saving…"
+          ? t("common.saving")
           : mode === "create"
-            ? "Create category"
-            : "Save changes"}
+            ? t("forms.createCategory")
+            : t("forms.saveChanges")}
       </Button>
     </form>
   );

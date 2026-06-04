@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "@/i18n/locale-provider";
 import {
   cancelMyRegistrationFromForm,
   registerForSessionFromForm,
@@ -24,6 +25,7 @@ export function RegisterButton({
   canCancel: boolean;
   cannotRegisterReason: string | null;
 }) {
+  const t = useTranslations();
   const registerAction = registerForSessionFromForm.bind(null, sessionId);
   const cancelAction = cancelMyRegistrationFromForm.bind(null, sessionId);
   const [registerState, registerFormAction, registerPending] = useActionState(
@@ -50,7 +52,7 @@ export function RegisterButton({
             disabled={cancelPending}
             className="w-full"
           >
-            {cancelPending ? "Cancelling…" : "Cancel registration"}
+            {cancelPending ? t("user.cancelling") : t("user.cancelRegistration")}
           </Button>
         </form>
       </div>
@@ -60,7 +62,7 @@ export function RegisterButton({
   if (isRegistered) {
     return (
       <p className="text-muted-foreground text-sm">
-        You are registered for this training.
+        {t("user.registeredForTraining")}
       </p>
     );
   }
@@ -68,7 +70,7 @@ export function RegisterButton({
   if (!canRegister) {
     return (
       <p className="text-muted-foreground text-sm">
-        {cannotRegisterReason ?? "Registration is not available."}
+        {cannotRegisterReason ?? t("user.registrationUnavailable")}
       </p>
     );
   }
@@ -82,7 +84,7 @@ export function RegisterButton({
       ) : null}
       <form action={registerFormAction}>
         <Button type="submit" disabled={registerPending} className="w-full">
-          {registerPending ? "Registering…" : "Register"}
+          {registerPending ? t("user.registering") : t("user.register")}
         </Button>
       </form>
     </div>

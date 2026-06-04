@@ -16,6 +16,12 @@ enum Role {
   USER
 }
 
+enum Locale {
+  nl
+  fr
+  en
+}
+
 enum RecurrenceType {
   NONE
   WEEKLY
@@ -64,9 +70,10 @@ model User {
   name         String
   email        String    @unique
   passwordHash String?
-  role         Role      @default(USER)
-  active       Boolean   @default(true)
-  categoryId   String?
+  role             Role      @default(USER)
+  preferredLocale  Locale    @default(nl)
+  active           Boolean   @default(true)
+  categoryId       String?
   category     Category? @relation(fields: [categoryId], references: [id])
 
   registrations    TrainingRegistration[] @relation("UserRegistrations")

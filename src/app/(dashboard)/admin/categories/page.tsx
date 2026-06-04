@@ -2,12 +2,9 @@ import type { Metadata } from "next";
 
 import { CategoriesList } from "@/components/admin/categories-list";
 import { PageHeading } from "@/components/layout/page-heading";
+import { createTranslator } from "@/i18n/get-messages";
 import type { ListCategoriesFilters } from "@/server/categories/queries";
 import { requireRole } from "@/server/auth/dal";
-
-export const metadata: Metadata = {
-  title: "Categories",
-};
 
 export const dynamic = "force-dynamic";
 
@@ -15,8 +12,15 @@ interface PageProps {
   searchParams: Promise<{ search?: string; status?: string }>;
 }
 
+export async function generateMetadata(): Promise<Metadata> {
+  const user = await requireRole("ADMIN");
+  const t = createTranslator(user.preferredLocale);
+  return { title: t("admin.categoriesTitle") };
+}
+
 export default async function AdminCategoriesPage({ searchParams }: PageProps) {
-  await requireRole("ADMIN");
+  const user = await requireRole("ADMIN");
+  const t = createTranslator(user.preferredLocale);
   const params = await searchParams;
 
   const filters: ListCategoriesFilters = {};
@@ -27,10 +31,10 @@ export default async function AdminCategoriesPage({ searchParams }: PageProps) {
   return (
     <div>
       <PageHeading
-        title="Categories"
-        description="Create and manage training categories."
+        title={t("admin.categoriesTitle")}
+        description={t("admin.categoriesDescription")}
       />
-      <CategoriesList filters={filters} />
+      <CategoriesList filters={filters} locale={user.preferredLocale} />
     </div>
   );
 }

@@ -2,19 +2,23 @@ import type { Metadata } from "next";
 
 import { TrainingForm } from "@/components/admin/training-form";
 import { PageHeading } from "@/components/layout/page-heading";
+import { createTranslator } from "@/i18n/get-messages";
 import { requireRole } from "@/server/auth/dal";
 import { createTraining } from "@/server/trainings/actions";
 import { listActiveTrainers } from "@/server/trainings/queries";
 import { listCategories } from "@/server/users/queries";
 
-export const metadata: Metadata = {
-  title: "New training",
-};
-
 export const dynamic = "force-dynamic";
 
+export async function generateMetadata(): Promise<Metadata> {
+  const user = await requireRole("ADMIN");
+  const t = createTranslator(user.preferredLocale);
+  return { title: t("admin.newTraining") };
+}
+
 export default async function NewTrainingPage() {
-  await requireRole("ADMIN");
+  const user = await requireRole("ADMIN");
+  const t = createTranslator(user.preferredLocale);
   const [categories, trainers] = await Promise.all([
     listCategories(),
     listActiveTrainers(),
@@ -23,8 +27,8 @@ export default async function NewTrainingPage() {
   return (
     <div>
       <PageHeading
-        title="New training"
-        description="Schedule a one-time or recurring training."
+        title={t("admin.newTraining")}
+        description={t("admin.newTrainingDescription")}
       />
       <TrainingForm
         action={createTraining}

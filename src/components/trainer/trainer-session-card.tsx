@@ -2,17 +2,10 @@ import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { createTranslator } from "@/i18n/get-messages";
+import { formatDateShort, formatTime } from "@/i18n/format";
+import type { Locale } from "@/i18n/locales";
 import type { TrainerSessionItem } from "@/server/trainer/queries";
-
-const dateFormat = new Intl.DateTimeFormat("en-GB", {
-  weekday: "short",
-  day: "numeric",
-  month: "short",
-});
-const timeFormat = new Intl.DateTimeFormat("en-GB", {
-  hour: "2-digit",
-  minute: "2-digit",
-});
 
 const statusVariant = {
   SCHEDULED: "success",
@@ -20,10 +13,25 @@ const statusVariant = {
   COMPLETED: "muted",
 } as const;
 
-export function TrainerSessionCard({ session }: { session: TrainerSessionItem }) {
+export function TrainerSessionCard({
+  session,
+  locale,
+}: {
+  session: TrainerSessionItem;
+  locale: Locale;
+}) {
+  const t = createTranslator(locale);
+  const statusLabel = {
+    SCHEDULED: t("admin.statusScheduled"),
+    CANCELLED: t("admin.statusCancelled"),
+    COMPLETED: t("admin.statusCompleted"),
+  } as const;
   const capacityLabel = session.capacity
-    ? `${session._count.registrations} / ${session.capacity} registered`
-    : `${session._count.registrations} registered`;
+    ? t("session.registeredCapacity", {
+        count: session._count.registrations,
+        capacity: session.capacity,
+      })
+    : t("session.registered", { count: session._count.registrations });
 
   return (
     <Card>
@@ -33,9 +41,9 @@ export function TrainerSessionCard({ session }: { session: TrainerSessionItem })
             <div>
               <p className="font-medium">{session.title}</p>
               <p className="text-muted-foreground text-sm">
-                {dateFormat.format(session.startsAt)}{" "}
-                {timeFormat.format(session.startsAt)} -{" "}
-                {timeFormat.format(session.endsAt)}
+                {formatDateShort(session.startsAt, locale)}{" "}
+                {formatTime(session.startsAt, locale)} -{" "}
+                {formatTime(session.endsAt, locale)}
               </p>
               {session.location ? (
                 <p className="text-muted-foreground text-sm">
@@ -45,7 +53,7 @@ export function TrainerSessionCard({ session }: { session: TrainerSessionItem })
               <p className="text-muted-foreground text-xs">{capacityLabel}</p>
             </div>
             <Badge variant={statusVariant[session.status]}>
-              {session.status}
+              {statusLabel[session.status]}
             </Badge>
           </div>
           <Badge variant="primary" className="w-fit">

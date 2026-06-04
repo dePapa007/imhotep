@@ -1,24 +1,35 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { createTranslator } from "@/i18n/get-messages";
+import type { Locale } from "@/i18n/locales";
 import { removeRegistration } from "@/server/trainings/actions";
 import type { SessionWithRegistrations } from "@/server/trainings/queries";
 
 export function RegistrationList({
   session,
+  locale,
 }: {
   session: SessionWithRegistrations;
+  locale: Locale;
 }) {
+  const t = createTranslator(locale);
+  const capacitySuffix = session.capacity ? ` / ${session.capacity}` : "";
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>
-          Registrations ({session.registrations.length}
-          {session.capacity ? ` / ${session.capacity}` : ""})
+          {t("admin.registrationsTitle", {
+            count: session.registrations.length,
+            capacity: capacitySuffix,
+          })}
         </CardTitle>
       </CardHeader>
       <CardContent>
         {session.registrations.length === 0 ? (
-          <p className="text-muted-foreground text-sm">No registrations yet.</p>
+          <p className="text-muted-foreground text-sm">
+            {t("admin.noRegistrationsYet")}
+          </p>
         ) : (
           <ul className="flex flex-col gap-2">
             {session.registrations.map((registration) => (
@@ -42,7 +53,7 @@ export function RegistrationList({
                   )}
                 >
                   <Button type="submit" variant="outline" size="sm">
-                    Remove
+                    {t("common.remove")}
                   </Button>
                 </form>
               </li>

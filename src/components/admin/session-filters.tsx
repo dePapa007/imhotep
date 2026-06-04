@@ -1,20 +1,15 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import { useMemo } from "react";
 
 import { Select } from "@/components/ui/select";
+import { useTranslations } from "@/i18n/locale-provider";
 
 interface Option {
   id: string;
   name: string;
 }
-
-const statusOptions = [
-  { label: "All statuses", value: "" },
-  { label: "Scheduled", value: "SCHEDULED" },
-  { label: "Cancelled", value: "CANCELLED" },
-  { label: "Completed", value: "COMPLETED" },
-];
 
 export function SessionFilters({
   categories,
@@ -23,12 +18,23 @@ export function SessionFilters({
   categories: Option[];
   trainers: Option[];
 }) {
+  const t = useTranslations();
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const category = searchParams.get("category") ?? "";
   const trainer = searchParams.get("trainer") ?? "";
   const status = searchParams.get("status") ?? "";
+
+  const statusOptions = useMemo(
+    () => [
+      { label: t("common.allStatuses"), value: "" },
+      { label: t("admin.statusScheduled"), value: "SCHEDULED" },
+      { label: t("admin.statusCancelled"), value: "CANCELLED" },
+      { label: t("admin.statusCompleted"), value: "COMPLETED" },
+    ],
+    [t],
+  );
 
   function updateParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -38,13 +44,13 @@ export function SessionFilters({
   }
 
   const categoryOptions = [
-    { label: "All categories", value: "" },
+    { label: t("forms.allCategories"), value: "" },
     ...categories.map((c) => ({ label: c.name, value: c.id })),
   ];
 
   const trainerOptions = [
-    { label: "All trainers", value: "" },
-    ...trainers.map((t) => ({ label: t.name, value: t.id })),
+    { label: t("forms.allTrainers"), value: "" },
+    ...trainers.map((tr) => ({ label: tr.name, value: tr.id })),
   ];
 
   return (
@@ -53,20 +59,20 @@ export function SessionFilters({
         options={categoryOptions}
         value={category}
         onChange={(event) => updateParam("category", event.target.value)}
-        aria-label="Filter by category"
+        aria-label={t("common.filterByCategory")}
       />
       <div className="grid grid-cols-2 gap-3">
         <Select
           options={trainerOptions}
           value={trainer}
           onChange={(event) => updateParam("trainer", event.target.value)}
-          aria-label="Filter by trainer"
+          aria-label={t("common.filterByTrainer")}
         />
         <Select
           options={statusOptions}
           value={status}
           onChange={(event) => updateParam("status", event.target.value)}
-          aria-label="Filter by status"
+          aria-label={t("common.filterBySessionStatus")}
         />
       </div>
     </div>

@@ -1,24 +1,18 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslations } from "@/i18n/locale-provider";
 import type { TrainingFormState } from "@/lib/validators/training";
 
 interface Option {
   id: string;
   name: string;
 }
-
-const recurrenceOptions = [
-  { label: "One-time", value: "NONE" },
-  { label: "Weekly", value: "WEEKLY" },
-  { label: "Bi-weekly", value: "BIWEEKLY" },
-  { label: "Monthly", value: "MONTHLY" },
-];
 
 export interface TrainingFormDefaults {
   title?: string;
@@ -53,8 +47,19 @@ export function TrainingForm({
   trainers,
   defaults,
 }: TrainingFormProps) {
+  const t = useTranslations();
   const [state, formAction, pending] = useActionState(action, initialState);
   const [recurrence, setRecurrence] = useState("NONE");
+
+  const recurrenceOptions = useMemo(
+    () => [
+      { label: t("forms.oneTime"), value: "NONE" },
+      { label: t("forms.weekly"), value: "WEEKLY" },
+      { label: t("forms.biweekly"), value: "BIWEEKLY" },
+      { label: t("forms.monthly"), value: "MONTHLY" },
+    ],
+    [t],
+  );
 
   const categoryOptions = categories.map((c) => ({
     label: c.name,
@@ -65,7 +70,7 @@ export function TrainingForm({
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <Input
-        label="Title"
+        label={t("forms.title")}
         name="title"
         type="text"
         required
@@ -73,26 +78,26 @@ export function TrainingForm({
         error={state.fieldErrors?.title?.[0]}
       />
       <Textarea
-        label="Description"
+        label={t("forms.description")}
         name="description"
-        placeholder="Optional details"
+        placeholder={t("forms.optionalDetails")}
         defaultValue={defaults?.description ?? ""}
         error={state.fieldErrors?.description?.[0]}
       />
       <Select
-        label="Category"
+        label={t("forms.category")}
         name="categoryId"
         options={categoryOptions}
-        placeholder="Select a category"
+        placeholder={t("forms.selectCategory")}
         defaultValue={defaults?.categoryId ?? ""}
         required
         error={state.fieldErrors?.categoryId?.[0]}
       />
       <Input
-        label="Location"
+        label={t("forms.location")}
         name="location"
         type="text"
-        placeholder="Field, hall, address"
+        placeholder={t("forms.locationPlaceholder")}
         defaultValue={defaults?.location ?? ""}
         error={state.fieldErrors?.location?.[0]}
       />
@@ -100,7 +105,7 @@ export function TrainingForm({
       {mode === "create" ? (
         <>
           <Select
-            label="Recurrence"
+            label={t("forms.recurrence")}
             name="recurrenceType"
             options={recurrenceOptions}
             defaultValue="NONE"
@@ -108,7 +113,7 @@ export function TrainingForm({
             error={state.fieldErrors?.recurrenceType?.[0]}
           />
           <Input
-            label={recurrence === "NONE" ? "Date" : "Start date"}
+            label={recurrence === "NONE" ? t("forms.date") : t("forms.startDate")}
             name="startDate"
             type="date"
             required
@@ -116,7 +121,7 @@ export function TrainingForm({
           />
           {recurrence !== "NONE" ? (
             <Input
-              label="End date"
+              label={t("forms.endDate")}
               name="endDate"
               type="date"
               required
@@ -126,7 +131,7 @@ export function TrainingForm({
         </>
       ) : (
         <Input
-          label="Date"
+          label={t("forms.date")}
           name="date"
           type="date"
           required
@@ -137,7 +142,7 @@ export function TrainingForm({
 
       <div className="grid grid-cols-2 gap-3">
         <Input
-          label="Start time"
+          label={t("forms.startTime")}
           name="startTime"
           type="time"
           required
@@ -145,7 +150,7 @@ export function TrainingForm({
           error={state.fieldErrors?.startTime?.[0]}
         />
         <Input
-          label="End time"
+          label={t("forms.endTime")}
           name="endTime"
           type="time"
           required
@@ -156,7 +161,7 @@ export function TrainingForm({
 
       <div className="grid grid-cols-2 gap-3">
         <Input
-          label="Capacity (optional)"
+          label={t("forms.capacityOptional")}
           name="capacity"
           type="number"
           min={1}
@@ -164,7 +169,7 @@ export function TrainingForm({
           error={state.fieldErrors?.capacity?.[0]}
         />
         <Input
-          label="Close registration (hours before)"
+          label={t("forms.closeRegistrationHours")}
           name="registrationDeadlineHours"
           type="number"
           min={0}
@@ -175,11 +180,11 @@ export function TrainingForm({
 
       <fieldset className="flex flex-col gap-2">
         <legend className="text-foreground mb-1 text-sm font-medium">
-          Trainers
+          {t("forms.trainers")}
         </legend>
         {trainers.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            No active trainers yet. Create trainers first.
+            {t("admin.noActiveTrainers")}
           </p>
         ) : (
           trainers.map((trainer) => (
@@ -212,10 +217,10 @@ export function TrainingForm({
       ) : null}
       <Button type="submit" disabled={pending} className="w-full">
         {pending
-          ? "Saving…"
+          ? t("common.saving")
           : mode === "create"
-            ? "Create training"
-            : "Save changes"}
+            ? t("forms.createTraining")
+            : t("forms.saveChanges")}
       </Button>
     </form>
   );

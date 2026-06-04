@@ -1,23 +1,28 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-
-const statusOptions = [
-  { label: "All statuses", value: "" },
-  { label: "Active", value: "active" },
-  { label: "Archived", value: "archived" },
-];
+import { useTranslations } from "@/i18n/locale-provider";
 
 export function CategoryFilters() {
+  const t = useTranslations();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
 
   const status = searchParams.get("status") ?? "";
+
+  const statusOptions = useMemo(
+    () => [
+      { label: t("common.allStatuses"), value: "" },
+      { label: t("common.active"), value: "active" },
+      { label: t("common.archived"), value: "archived" },
+    ],
+    [t],
+  );
 
   function updateParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -26,7 +31,6 @@ export function CategoryFilters() {
     router.replace(`?${params.toString()}`);
   }
 
-  // Debounce search updates to the URL.
   useEffect(() => {
     const current = searchParams.get("search") ?? "";
     if (search === current) return;
@@ -39,16 +43,16 @@ export function CategoryFilters() {
     <div className="flex flex-col gap-3">
       <Input
         type="search"
-        placeholder="Search by name or description"
+        placeholder={t("forms.searchNameDesc")}
         value={search}
         onChange={(event) => setSearch(event.target.value)}
-        aria-label="Search categories"
+        aria-label={t("common.search")}
       />
       <Select
         options={statusOptions}
         value={status}
         onChange={(event) => updateParam("status", event.target.value)}
-        aria-label="Filter by status"
+        aria-label={t("common.filterByStatus")}
       />
     </div>
   );

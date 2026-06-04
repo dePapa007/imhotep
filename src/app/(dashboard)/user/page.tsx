@@ -11,39 +11,37 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { createTranslator } from "@/i18n/get-messages";
+import { formatDateTimeMedium } from "@/i18n/format";
 import { requireRole } from "@/server/auth/dal";
 import {
   getNextRegisteredSession,
   listAvailableSessionsForUser,
 } from "@/server/registrations/queries";
 
-export const metadata: Metadata = {
-  title: "Home",
-};
-
 export const dynamic = "force-dynamic";
 
-const dateTimeFormat = new Intl.DateTimeFormat("en-GB", {
-  weekday: "short",
-  day: "numeric",
-  month: "short",
-  hour: "2-digit",
-  minute: "2-digit",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const user = await requireRole("USER");
+  const t = createTranslator(user.preferredLocale);
+  return { title: t("user.homeTitle") };
+}
 
 export default async function UserHomePage() {
   const user = await requireRole("USER");
+  const t = createTranslator(user.preferredLocale);
+  const locale = user.preferredLocale;
 
   if (!user.categoryId) {
     return (
       <div>
         <PageHeading
-          title="Welcome"
-          description="Your academy home for trainings and registrations."
+          title={t("user.welcomeTitle")}
+          description={t("user.homeDescription")}
         />
         <EmptyState
-          title="No category assigned"
-          description="Ask an administrator to assign you to a category to see eligible trainings."
+          title={t("user.noCategoryTitle")}
+          description={t("user.noCategoryDesc")}
         />
       </div>
     );
@@ -58,18 +56,18 @@ export default async function UserHomePage() {
   return (
     <div>
       <PageHeading
-        title={`Hi, ${user.name.split(" ")[0]}`}
-        description="Your upcoming trainings at a glance."
+        title={t("user.hi", { name: user.name.split(" ")[0]! })}
+        description={t("user.homeSubtitle")}
       />
 
       <section className="mb-6">
-        <h2 className="mb-3 text-sm font-semibold">Next registered training</h2>
+        <h2 className="mb-3 text-sm font-semibold">{t("user.nextTraining")}</h2>
         {nextRegistered ? (
           <Card>
             <CardHeader>
               <CardTitle>{nextRegistered.title}</CardTitle>
               <CardDescription>
-                {dateTimeFormat.format(nextRegistered.startsAt)}
+                {formatDateTimeMedium(nextRegistered.startsAt, locale)}
               </CardDescription>
             </CardHeader>
             <div className="px-4 pb-4">
@@ -77,17 +75,17 @@ export default async function UserHomePage() {
                 href={`/user/trainings/${nextRegistered.id}`}
                 className={buttonClasses({ variant: "outline", size: "sm" })}
               >
-                View details
+                {t("user.viewDetails")}
               </Link>
             </div>
           </Card>
         ) : (
           <EmptyState
-            title="No registrations yet"
-            description="Browse available trainings to register for your next session."
+            title={t("user.noRegistrationsTitle")}
+            description={t("user.noRegistrationsDesc")}
             action={
               <Link href="/user/browse" className={buttonClasses()}>
-                Browse trainings
+                {t("user.browseTrainings")}
               </Link>
             }
           />
@@ -96,32 +94,36 @@ export default async function UserHomePage() {
 
       <div className="mb-6 grid grid-cols-2 gap-3">
         <Link href="/user/browse" className={buttonClasses()}>
-          Browse trainings
+          {t("user.browseTrainings")}
         </Link>
         <Link
           href="/user/my-trainings"
           className={buttonClasses({ variant: "outline" })}
         >
-          My trainings
+          {t("user.myTrainings")}
         </Link>
       </div>
 
       <section>
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold">Available trainings</h2>
+          <h2 className="text-sm font-semibold">{t("user.availableTrainings")}</h2>
           <Link href="/user/browse" className="text-primary text-xs font-medium">
-            See all
+            {t("common.seeAll")}
           </Link>
         </div>
         {preview.length === 0 ? (
           <EmptyState
-            title="Nothing available right now"
-            description="No upcoming trainings in your category at the moment."
+            title={t("user.nothingAvailableTitle")}
+            description={t("user.nothingAvailableDesc")}
           />
         ) : (
           <div className="flex flex-col gap-3">
             {preview.map((session) => (
-              <UserTrainingCard key={session.id} session={session} />
+              <UserTrainingCard
+                key={session.id}
+                session={session}
+                locale={locale}
+              />
             ))}
           </div>
         )}

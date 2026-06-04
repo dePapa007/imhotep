@@ -4,6 +4,7 @@ import { SessionRangeTabs } from "@/components/admin/session-range-tabs";
 import { AvailableSessionsList } from "@/components/user/available-sessions-list";
 import { PageHeading } from "@/components/layout/page-heading";
 import { EmptyState } from "@/components/ui/empty-state";
+import { createTranslator } from "@/i18n/get-messages";
 import {
   getRangeBounds,
   RANGE_VALUES,
@@ -12,30 +13,33 @@ import {
 import { requireRole } from "@/server/auth/dal";
 import { listAvailableSessionsForUser } from "@/server/registrations/queries";
 
-export const metadata: Metadata = {
-  title: "Browse trainings",
-};
-
 export const dynamic = "force-dynamic";
 
 interface PageProps {
   searchParams: Promise<{ range?: string }>;
 }
 
+export async function generateMetadata(): Promise<Metadata> {
+  const user = await requireRole("USER");
+  const t = createTranslator(user.preferredLocale);
+  return { title: t("user.browsePageTitle") };
+}
+
 export default async function UserBrowsePage({ searchParams }: PageProps) {
   const user = await requireRole("USER");
+  const t = createTranslator(user.preferredLocale);
   const params = await searchParams;
 
   if (!user.categoryId) {
     return (
       <div>
         <PageHeading
-          title="Browse trainings"
-          description="Eligible trainings in your category."
+          title={t("user.browsePageTitle")}
+          description={t("user.browseNoCategoryDesc")}
         />
         <EmptyState
-          title="No category assigned"
-          description="Ask an administrator to assign you to a category first."
+          title={t("user.noCategoryTitle")}
+          description={t("user.noCategoryDesc")}
         />
       </div>
     );
@@ -52,12 +56,19 @@ export default async function UserBrowsePage({ searchParams }: PageProps) {
   return (
     <div>
       <PageHeading
-        title="Browse trainings"
-        description="Upcoming trainings you can register for."
+        title={t("user.browsePageTitle")}
+        description={t("user.browseDescription")}
       />
       <div className="flex flex-col gap-4">
-        <SessionRangeTabs basePath="/user/browse" currentRange={range} />
-        <AvailableSessionsList sessions={sessions} />
+        <SessionRangeTabs
+          basePath="/user/browse"
+          currentRange={range}
+          locale={user.preferredLocale}
+        />
+        <AvailableSessionsList
+          sessions={sessions}
+          locale={user.preferredLocale}
+        />
       </div>
     </div>
   );

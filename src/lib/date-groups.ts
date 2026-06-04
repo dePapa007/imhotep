@@ -1,3 +1,6 @@
+import { formatDateShort, formatDayHeading } from "@/i18n/format";
+import type { Locale } from "@/i18n/locales";
+
 export type RangeType = "day" | "week" | "month" | "all";
 
 export const RANGE_VALUES: RangeType[] = ["day", "week", "month", "all"];
@@ -59,31 +62,11 @@ export function getRangeBounds(
   }
 }
 
-const dayLabelFormat = new Intl.DateTimeFormat("en-GB", {
-  weekday: "short",
-  day: "numeric",
-  month: "short",
-});
-
 function dateKey(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
-}
-
-function isSameDay(a: Date, b: Date): boolean {
-  return dateKey(a) === dateKey(b);
-}
-
-export function formatDayHeading(date: Date, reference = new Date()): string {
-  const today = startOfDay(reference);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-
-  if (isSameDay(date, today)) return "Today";
-  if (isSameDay(date, tomorrow)) return "Tomorrow";
-  return dayLabelFormat.format(date);
 }
 
 export interface DayGroup<T extends { startsAt: Date }> {
@@ -94,6 +77,7 @@ export interface DayGroup<T extends { startsAt: Date }> {
 
 export function groupSessionsByDay<T extends { startsAt: Date }>(
   sessions: T[],
+  locale: Locale,
   reference = new Date(),
 ): DayGroup<T>[] {
   const map = new Map<string, T[]>();
@@ -111,8 +95,10 @@ export function groupSessionsByDay<T extends { startsAt: Date }>(
       const first = groupSessions[0]!;
       return {
         dateKey: key,
-        label: formatDayHeading(first.startsAt, reference),
+        label: formatDayHeading(first.startsAt, locale, reference),
         sessions: groupSessions,
       };
     });
 }
+
+export { formatDateShort };

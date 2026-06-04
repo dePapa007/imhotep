@@ -4,11 +4,9 @@ import { ReportExportLinks } from "@/components/admin/report-export-links";
 import { ReportRangeTabs } from "@/components/admin/report-range-tabs";
 import { ReportsOverview } from "@/components/admin/reports-overview";
 import { PageHeading } from "@/components/layout/page-heading";
-import {
-  getReportRangeBounds,
-  parseReportRange,
-  reportRangeLabel,
-} from "@/lib/report-range";
+import { createTranslator } from "@/i18n/get-messages";
+import { reportRangeLabel } from "@/i18n/format";
+import { getReportRangeBounds, parseReportRange } from "@/lib/report-range";
 import { requireRole } from "@/server/auth/dal";
 import {
   getDashboardMetrics,
@@ -18,21 +16,25 @@ import {
   listUserParticipation,
 } from "@/server/reports/queries";
 
-export const metadata: Metadata = {
-  title: "Reports",
-};
-
 export const dynamic = "force-dynamic";
 
 interface PageProps {
   searchParams: Promise<{ range?: string }>;
 }
 
+export async function generateMetadata(): Promise<Metadata> {
+  const user = await requireRole("ADMIN");
+  const t = createTranslator(user.preferredLocale);
+  return { title: t("admin.reportsTitle") };
+}
+
 export default async function AdminReportsPage({ searchParams }: PageProps) {
-  await requireRole("ADMIN");
+  const user = await requireRole("ADMIN");
+  const t = createTranslator(user.preferredLocale);
   const params = await searchParams;
   const range = parseReportRange(params.range, "month");
   const bounds = getReportRangeBounds(range);
+  const period = reportRangeLabel(range, user.preferredLocale);
 
   const [
     metrics,
@@ -51,19 +53,29 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
   return (
     <div>
       <PageHeading
-        title="Reports & insights"
-        description={`Overview for ${reportRangeLabel[range].toLowerCase()}.`}
+        title={t("admin.reportsTitle")}
+        description={t("admin.reportsDescription", { period })}
       />
 
-      <ReportRangeTabs basePath="/admin/reports" currentRange={range} />
+      <ReportRangeTabs
+        basePath="/admin/reports"
+        currentRange={range}
+        locale={user.preferredLocale}
+      />
 
       <div className="mt-4">
-        <AdminMetricsCards metrics={metrics} />
+        <AdminMetricsCards
+          metrics={metrics}
+          locale={user.preferredLocale}
+        />
       </div>
 
       <div className="mt-6">
-        <h2 className="mb-2 text-sm font-semibold">Export data</h2>
-        <ReportExportLinks range={range} />
+        <h2 className="mb-2 text-sm font-semibold">{t("admin.exportData")}</h2>
+        <ReportExportLinks
+          range={range}
+          locale={user.preferredLocale}
+        />
       </div>
 
       <div className="mt-8">
@@ -72,6 +84,7 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
           categories={categories}
           trainers={trainers}
           participation={participation}
+          locale={user.preferredLocale}
         />
       </div>
     </div>

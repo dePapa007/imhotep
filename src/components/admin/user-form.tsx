@@ -1,20 +1,15 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { useTranslations } from "@/i18n/locale-provider";
 import type { CategoryOption } from "@/server/users/queries";
 import type { UserFormState } from "@/lib/validators/user";
 
 type Role = "ADMIN" | "TRAINER" | "USER";
-
-const roleOptions = [
-  { label: "Member", value: "USER" },
-  { label: "Trainer", value: "TRAINER" },
-  { label: "Admin", value: "ADMIN" },
-];
 
 export interface UserFormDefaults {
   name?: string;
@@ -42,7 +37,17 @@ export function UserForm({
   mode,
   defaults,
 }: UserFormProps) {
+  const t = useTranslations();
   const [state, formAction, pending] = useActionState(action, initialState);
+
+  const roleOptions = useMemo(
+    () => [
+      { label: t("roles.USER"), value: "USER" },
+      { label: t("roles.TRAINER"), value: "TRAINER" },
+      { label: t("roles.ADMIN"), value: "ADMIN" },
+    ],
+    [t],
+  );
 
   const categoryOptions = categories.map((category) => ({
     label: category.name,
@@ -52,7 +57,7 @@ export function UserForm({
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <Input
-        label="Name"
+        label={t("forms.name")}
         name="name"
         type="text"
         autoComplete="name"
@@ -61,7 +66,7 @@ export function UserForm({
         error={state.fieldErrors?.name?.[0]}
       />
       <Input
-        label="Email"
+        label={t("forms.email")}
         name="email"
         type="email"
         autoComplete="email"
@@ -70,27 +75,33 @@ export function UserForm({
         error={state.fieldErrors?.email?.[0]}
       />
       <Select
-        label="Role"
+        label={t("forms.role")}
         name="role"
         options={roleOptions}
         defaultValue={defaults?.role ?? "USER"}
         error={state.fieldErrors?.role?.[0]}
       />
       <Select
-        label="Category"
+        label={t("forms.category")}
         name="categoryId"
         options={categoryOptions}
-        placeholder="No category"
+        placeholder={t("common.noCategory")}
         defaultValue={defaults?.categoryId ?? ""}
         error={state.fieldErrors?.categoryId?.[0]}
       />
       <Input
-        label={mode === "create" ? "Set password" : "New password (optional)"}
+        label={
+          mode === "create"
+            ? t("forms.setPassword")
+            : t("forms.newPasswordOptional")
+        }
         name="password"
         type="password"
         autoComplete="new-password"
         required={mode === "create"}
-        placeholder={mode === "edit" ? "Leave blank to keep current" : undefined}
+        placeholder={
+          mode === "edit" ? t("forms.passwordKeepBlank") : undefined
+        }
         error={state.fieldErrors?.password?.[0]}
       />
       {mode === "edit" ? (
@@ -101,7 +112,7 @@ export function UserForm({
             defaultChecked={defaults?.active ?? true}
             className="h-4 w-4 rounded border-input"
           />
-          Account active
+          {t("forms.accountActive")}
         </label>
       ) : null}
       {state.error ? (
@@ -111,10 +122,10 @@ export function UserForm({
       ) : null}
       <Button type="submit" disabled={pending} className="w-full">
         {pending
-          ? "Saving…"
+          ? t("common.saving")
           : mode === "create"
-            ? "Create user"
-            : "Save changes"}
+            ? t("forms.createUser")
+            : t("forms.saveChanges")}
       </Button>
     </form>
   );

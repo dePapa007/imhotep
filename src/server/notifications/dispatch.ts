@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { NotificationType, Role } from "@prisma/client";
+import type { Locale, NotificationType, Role } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { env } from "@/lib/env";
@@ -82,13 +82,17 @@ export async function sendRegistrationConfirmation(
     loadSessionForEmail(sessionId),
     prisma.user.findUnique({
       where: { id: userId },
-      select: { name: true, email: true },
+      select: { name: true, email: true, preferredLocale: true },
     }),
   ]);
   if (!session || !user) return;
 
   const ctx = toSessionContext(session);
-  const { subject, html, text } = registrationConfirmationEmail(user.name, ctx);
+  const { subject, html, text } = registrationConfirmationEmail(
+    user.name,
+    ctx,
+    user.preferredLocale,
+  );
 
   await deliverNotification({
     type: "REGISTRATION_CONFIRMATION",
@@ -122,7 +126,7 @@ export async function sendSessionFullAdminNotifications(sessionId: string) {
 
   const admins = await prisma.user.findMany({
     where: { role: "ADMIN", active: true },
-    select: { id: true, name: true, email: true },
+    select: { id: true, name: true, email: true, preferredLocale: true },
   });
 
   const ctx = toSessionContext(session);
@@ -133,6 +137,7 @@ export async function sendSessionFullAdminNotifications(sessionId: string) {
       ctx,
       session._count.registrations,
       session.capacity,
+      admin.preferredLocale,
     );
     await deliverNotification({
       type: "SESSION_FULL_ADMIN",
@@ -158,7 +163,9 @@ export async function sendSessionCancelledNotifications(sessionId: string) {
         where: { status: "REGISTERED" },
         select: {
           userId: true,
-          user: { select: { name: true, email: true } },
+          user: {
+            select: { name: true, email: true, preferredLocale: true },
+          },
         },
       },
     },
@@ -171,6 +178,7 @@ export async function sendSessionCancelledNotifications(sessionId: string) {
     const { subject, html, text } = sessionCancelledEmail(
       registration.user.name,
       ctx,
+      registration.user.preferredLocale,
     );
     await deliverNotification({
       type: "SESSION_CANCELLED",
@@ -191,7 +199,13 @@ export async function sendTrainerAssignedNotification(
     loadSessionForEmail(sessionId),
     prisma.user.findUnique({
       where: { id: trainerId },
-      select: { name: true, email: true, role: true, active: true },
+      select: {
+        name: true,
+        email: true,
+        role: true,
+        active: true,
+        preferredLocale: true,
+      },
     }),
   ]);
   if (!session || !trainer || trainer.role !== "TRAINER" || !trainer.active) {
@@ -199,7 +213,11 @@ export async function sendTrainerAssignedNotification(
   }
 
   const ctx = toSessionContext(session);
-  const { subject, html, text } = trainerAssignedEmail(trainer.name, ctx);
+  const { subject, html, text } = trainerAssignedEmail(
+    trainer.name,
+    ctx,
+    trainer.preferredLocale,
+  );
 
   await deliverNotification({
     type: "TRAINER_ASSIGNED",
@@ -213,7 +231,7 @@ export async function sendTrainerAssignedNotification(
 
 export async function sendTrainingReminder(
   session: SessionEmailContext,
-  recipient: { name: string; email: string },
+  recipient: { name: string; email: string; preferredLocale: Locale },
   recipientId: string,
   role: "member" | "trainer",
 ): Promise<"sent" | "skipped"> {
@@ -221,6 +239,7 @@ export async function sendTrainingReminder(
     recipient.name,
     session,
     role,
+    recipient.preferredLocale,
   );
 
   return deliverNotification({
@@ -254,13 +273,17 @@ export async function sendDueReminders() {
         where: { status: "REGISTERED" },
         select: {
           userId: true,
-          user: { select: { name: true, email: true } },
+          user: {
+            select: { name: true, email: true, preferredLocale: true },
+          },
         },
       },
       trainers: {
         select: {
           trainerId: true,
-          trainer: { select: { name: true, email: true } },
+          trainer: {
+            select: { name: true, email: true, preferredLocale: true },
+          },
         },
       },
     },
@@ -313,15 +336,20 @@ export async function sendUserWelcome({
 }) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { category: { select: { name: true } } },
+    select: {
+      preferredLocale: true,
+      category: { select: { name: true } },
+    },
   });
 
+  const locale = user?.preferredLocale ?? "nl";
   const { subject, html, text } = userWelcomeEmail({
     name,
     email,
     password,
     role,
     categoryName: user?.category?.name,
+    locale,
   });
 
   await deliverNotification({

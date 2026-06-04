@@ -4,20 +4,29 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { createTranslator } from "@/i18n/get-messages";
+import type { Locale } from "@/i18n/locales";
 import type { DashboardMetrics } from "@/server/reports/queries";
 
-export function AdminMetricsCards({ metrics }: { metrics: DashboardMetrics }) {
+export function AdminMetricsCards({
+  metrics,
+  locale,
+}: {
+  metrics: DashboardMetrics;
+  locale: Locale;
+}) {
+  const t = createTranslator(locale);
   const cards = [
-    { label: "Sessions", value: metrics.sessionCount },
-    { label: "Registrations", value: metrics.registrationCount },
+    { label: t("admin.metricsSessions"), value: metrics.sessionCount },
+    { label: t("admin.metricsRegistrations"), value: metrics.registrationCount },
     {
-      label: "Attendance rate",
+      label: t("admin.metricsAttendanceRate"),
       value:
         metrics.attendanceRate !== null
           ? `${metrics.attendanceRate}%`
           : "—",
     },
-    { label: "Active members", value: metrics.activeParticipants },
+    { label: t("admin.metricsActiveMembers"), value: metrics.activeParticipants },
   ];
 
   return (

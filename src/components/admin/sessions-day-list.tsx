@@ -1,16 +1,25 @@
 import { SessionCard } from "@/components/admin/session-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { createTranslator } from "@/i18n/get-messages";
+import type { Locale } from "@/i18n/locales";
 import { groupSessionsByDay } from "@/lib/date-groups";
 import type { SessionListItem } from "@/server/trainings/queries";
 
-export function SessionsDayList({ sessions }: { sessions: SessionListItem[] }) {
-  const groups = groupSessionsByDay(sessions);
+export function SessionsDayList({
+  sessions,
+  locale,
+}: {
+  sessions: SessionListItem[];
+  locale: Locale;
+}) {
+  const t = createTranslator(locale);
+  const groups = groupSessionsByDay(sessions, locale);
 
   if (groups.length === 0) {
     return (
       <EmptyState
-        title="No trainings found"
-        description="Try adjusting your date range or filters."
+        title={t("admin.noTrainingsFound")}
+        description={t("admin.noTrainingsFoundDesc")}
       />
     );
   }
@@ -29,6 +38,7 @@ export function SessionsDayList({ sessions }: { sessions: SessionListItem[] }) {
                 session={session}
                 href={`/admin/trainings/${session.id}`}
                 compact
+                locale={locale}
               />
             ))}
           </div>

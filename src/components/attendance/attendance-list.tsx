@@ -2,7 +2,6 @@
 
 import { useMemo, useState, useTransition } from "react";
 
-import { attendanceStatusLabel } from "@/lib/attendance";
 import type { AttendanceMarkInput } from "@/lib/validators/attendance";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslations } from "@/i18n/locale-provider";
 import type { AttendanceActionResult } from "@/server/attendance/actions";
 import type { AttendanceStatus } from "@prisma/client";
 
@@ -57,6 +57,13 @@ export function AttendanceList({
   lockedMessage,
   saveAction,
 }: AttendanceListProps) {
+  const t = useTranslations();
+  const statusLabel = {
+    UNMARKED: t("admin.attendanceUnmarked"),
+    PRESENT: t("admin.attendancePresent"),
+    ABSENT: t("admin.attendanceAbsent"),
+  } as const;
+
   const [rows, setRows] = useState<Record<string, RowState>>(() =>
     Object.fromEntries(
       registrations.map((r) => [
@@ -77,10 +84,7 @@ export function AttendanceList({
     };
   }, [rows]);
 
-  function updateRow(
-    registrationId: string,
-    patch: Partial<RowState>,
-  ) {
+  function updateRow(registrationId: string, patch: Partial<RowState>) {
     setRows((prev) => {
       const current = prev[registrationId] ?? {
         status: "UNMARKED" as AttendanceStatus,
@@ -137,7 +141,7 @@ export function AttendanceList({
       if (result.error) {
         setMessage(result.error);
       } else {
-        setMessage("Attendance saved.");
+        setMessage(t("admin.attendanceSaved"));
       }
     });
   }
@@ -145,23 +149,22 @@ export function AttendanceList({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Attendance</CardTitle>
+        <CardTitle>{t("admin.attendance")}</CardTitle>
         <CardDescription>
           {canEdit
-            ? "Mark who attended this training."
-            : lockedMessage ?? "Attendance overview."}
+            ? t("admin.markWhoAttended")
+            : lockedMessage ?? t("admin.attendanceOverview")}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {registrations.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            No registered members to mark.
+            {t("admin.noRegisteredMembers")}
           </p>
         ) : (
           <>
             <p className="text-muted-foreground text-sm">
-              {summary.present} present · {summary.absent} absent ·{" "}
-              {summary.unmarked} unmarked
+              {t("admin.attendanceSummary", summary)}
             </p>
             <ul className="flex flex-col gap-4">
               {registrations.map((registration) => {
@@ -186,10 +189,8 @@ export function AttendanceList({
                         ) : null}
                       </div>
                       {!canEdit ? (
-                        <Badge
-                          variant={statusBadgeVariant[row.status]}
-                        >
-                          {attendanceStatusLabel[row.status]}
+                        <Badge variant={statusBadgeVariant[row.status]}>
+                          {statusLabel[row.status]}
                         </Badge>
                       ) : null}
                     </div>
@@ -210,18 +211,18 @@ export function AttendanceList({
                                 setStatus(registration.id, status)
                               }
                             >
-                              {attendanceStatusLabel[status]}
+                              {statusLabel[status]}
                             </Button>
                           ))}
                         </div>
                         <Textarea
-                          label="Notes"
+                          label={t("admin.notes")}
                           rows={2}
                           value={row.notes}
                           onChange={(e) =>
                             setNotes(registration.id, e.target.value)
                           }
-                          placeholder="Optional note"
+                          placeholder={t("admin.optionalNote")}
                         />
                       </>
                     ) : row.notes ? (
@@ -242,7 +243,7 @@ export function AttendanceList({
                   onClick={markAllPresent}
                   disabled={pending}
                 >
-                  Mark all present
+                  {t("admin.markAllPresent")}
                 </Button>
                 <Button
                   type="button"
@@ -250,7 +251,9 @@ export function AttendanceList({
                   onClick={handleSubmit}
                   disabled={pending}
                 >
-                  {pending ? "Saving…" : "Save attendance"}
+                  {pending
+                    ? t("admin.savingAttendance")
+                    : t("admin.saveAttendance")}
                 </Button>
               </div>
             ) : null}
@@ -259,7 +262,7 @@ export function AttendanceList({
         {message ? (
           <p
             className={
-              message === "Attendance saved."
+              message === t("admin.attendanceSaved")
                 ? "text-primary text-sm"
                 : "text-destructive text-sm"
             }

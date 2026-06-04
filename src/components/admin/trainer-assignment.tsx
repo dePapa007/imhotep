@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
+import { useTranslations } from "@/i18n/locale-provider";
 import {
   addTrainerFromForm,
   removeTrainerFromSession,
@@ -29,22 +30,25 @@ export function TrainerAssignment({
   assigned: AssignedTrainer[];
   availableTrainers: TrainerOption[];
 }) {
+  const t = useTranslations();
   const action = addTrainerFromForm.bind(null, sessionId);
   const [state, formAction, pending] = useActionState(action, initialState);
 
-  const assignedIds = new Set(assigned.map((t) => t.trainerId));
+  const assignedIds = new Set(assigned.map((tr) => tr.trainerId));
   const options = availableTrainers
-    .filter((t) => !assignedIds.has(t.id))
-    .map((t) => ({ label: t.name, value: t.id }));
+    .filter((tr) => !assignedIds.has(tr.id))
+    .map((tr) => ({ label: tr.name, value: tr.id }));
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Trainers</CardTitle>
+        <CardTitle>{t("trainer.trainers")}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {assigned.length === 0 ? (
-          <p className="text-muted-foreground text-sm">No trainers assigned.</p>
+          <p className="text-muted-foreground text-sm">
+            {t("admin.noTrainersAssignedCard")}
+          </p>
         ) : (
           <ul className="flex flex-col gap-2">
             {assigned.map((entry) => (
@@ -63,7 +67,7 @@ export function TrainerAssignment({
                   )}
                 >
                   <Button type="submit" variant="outline" size="sm">
-                    Remove
+                    {t("common.remove")}
                   </Button>
                 </form>
               </li>
@@ -76,7 +80,7 @@ export function TrainerAssignment({
             <Select
               name="trainerId"
               options={options}
-              placeholder="Add a trainer"
+              placeholder={t("admin.addTrainerPlaceholder")}
             />
             {state.error ? (
               <p className="text-destructive text-sm" role="alert">
@@ -84,7 +88,7 @@ export function TrainerAssignment({
               </p>
             ) : null}
             <Button type="submit" disabled={pending} size="sm" variant="secondary">
-              {pending ? "Adding…" : "Add trainer"}
+              {pending ? t("forms.adding") : t("admin.addTrainer")}
             </Button>
           </form>
         ) : null}

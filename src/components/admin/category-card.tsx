@@ -3,10 +3,19 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { createTranslator } from "@/i18n/get-messages";
+import type { Locale } from "@/i18n/locales";
 import { toggleCategoryActive } from "@/server/categories/actions";
 import type { CategoryListItem } from "@/server/categories/queries";
 
-export function CategoryCard({ category }: { category: CategoryListItem }) {
+export function CategoryCard({
+  category,
+  locale,
+}: {
+  category: CategoryListItem;
+  locale: Locale;
+}) {
+  const t = createTranslator(locale);
   const toggle = toggleCategoryActive.bind(null, category.id);
 
   return (
@@ -16,7 +25,7 @@ export function CategoryCard({ category }: { category: CategoryListItem }) {
           <div className="flex items-center gap-2">
             <p className="font-medium">{category.name}</p>
             <Badge variant={category.active ? "success" : "destructive"}>
-              {category.active ? "Active" : "Archived"}
+              {category.active ? t("common.active") : t("common.archived")}
             </Badge>
           </div>
           {category.description ? (
@@ -25,8 +34,10 @@ export function CategoryCard({ category }: { category: CategoryListItem }) {
             </p>
           ) : null}
           <p className="text-muted-foreground mt-2 text-xs">
-            {category._count.users} member(s) - {category._count.trainingSessions}{" "}
-            session(s)
+            {t("admin.categoryMeta", {
+              users: category._count.users,
+              sessions: category._count.trainingSessions,
+            })}
           </p>
         </div>
         <div className="flex gap-2">
@@ -34,7 +45,7 @@ export function CategoryCard({ category }: { category: CategoryListItem }) {
             href={`/admin/categories/${category.id}/edit`}
             className={buttonClasses({ variant: "outline", size: "sm" })}
           >
-            Edit
+            {t("common.edit")}
           </Link>
           <form action={toggle} className="w-full sm:w-auto">
             <Button
@@ -42,7 +53,7 @@ export function CategoryCard({ category }: { category: CategoryListItem }) {
               size="sm"
               variant={category.active ? "destructive" : "secondary"}
             >
-              {category.active ? "Archive" : "Restore"}
+              {category.active ? t("admin.archive") : t("admin.restoreCategory")}
             </Button>
           </form>
         </div>

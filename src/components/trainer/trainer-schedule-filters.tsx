@@ -1,17 +1,22 @@
 import { FilterLinkTabs } from "@/components/ui/filter-link-tabs";
+import { createTranslator } from "@/i18n/get-messages";
+import type { Locale } from "@/i18n/locales";
 import type { ScheduleFilter } from "@/server/trainer/queries";
-
-const filters: { value: ScheduleFilter; label: string }[] = [
-  { value: "upcoming", label: "Upcoming" },
-  { value: "past", label: "Past" },
-  { value: "cancelled", label: "Cancelled" },
-];
 
 export function TrainerScheduleFilters({
   currentFilter,
+  locale,
 }: {
   currentFilter: ScheduleFilter;
+  locale: Locale;
 }) {
+  const t = createTranslator(locale);
+  const filters: { value: ScheduleFilter; label: string }[] = [
+    { value: "upcoming", label: t("common.upcoming") },
+    { value: "past", label: t("common.past") },
+    { value: "cancelled", label: t("common.cancelled") },
+  ];
+
   return (
     <FilterLinkTabs
       basePath="/trainer/schedule"
@@ -19,7 +24,7 @@ export function TrainerScheduleFilters({
       options={filters}
       currentValue={currentFilter}
       defaultValue="upcoming"
-      ariaLabel="Schedule filter"
+      ariaLabel={t("common.filterSchedule")}
     />
   );
 }
