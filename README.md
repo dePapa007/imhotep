@@ -124,6 +124,7 @@ Transactional email is sent via [Resend](https://resend.com) over HTTPS — no l
 
 | Event | Recipients |
 | ----- | ---------- |
+| New user created (admin) | New user (welcome + login credentials) |
 | Registration | Member who registered |
 | Session cancelled | All registered members |
 | Trainer assigned | Newly assigned trainer |

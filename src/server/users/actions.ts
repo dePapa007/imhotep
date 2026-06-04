@@ -12,6 +12,7 @@ import {
   type UserFormState,
 } from "@/lib/validators/user";
 import { requireRole } from "@/server/auth/dal";
+import { notifyUserWelcome } from "@/server/notifications/dispatch";
 
 export async function createUser(
   _prevState: UserFormState,
@@ -47,6 +48,14 @@ export async function createUser(
       passwordHash: await hashPassword(password),
     },
     select: { id: true },
+  });
+
+  notifyUserWelcome({
+    userId: created.id,
+    name,
+    email,
+    role,
+    password,
   });
 
   revalidatePath("/admin/users");

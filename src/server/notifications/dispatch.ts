@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { NotificationType } from "@prisma/client";
+import type { NotificationType, Role } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { env } from "@/lib/env";
@@ -13,6 +13,7 @@ import {
   sessionFullAdminEmail,
   trainerAssignedEmail,
   trainingReminderEmail,
+  userWelcomeEmail,
   type SessionEmailContext,
 } from "./templates";
 
@@ -297,6 +298,42 @@ export async function sendDueReminders() {
   return { sent, skipped, sessions: sessions.length };
 }
 
+export async function sendUserWelcome({
+  userId,
+  name,
+  email,
+  role,
+  password,
+}: {
+  userId: string;
+  name: string;
+  email: string;
+  role: Role;
+  password: string;
+}) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { category: { select: { name: true } } },
+  });
+
+  const { subject, html, text } = userWelcomeEmail({
+    name,
+    email,
+    password,
+    role,
+    categoryName: user?.category?.name,
+  });
+
+  await deliverNotification({
+    type: "USER_WELCOME",
+    dedupeKey: `USER_WELCOME:${userId}`,
+    recipientEmail: email,
+    subject,
+    html,
+    text,
+  });
+}
+
 function runInBackground(promise: Promise<void>) {
   void promise.catch((error) => {
     console.error("[notifications]", error);
@@ -338,4 +375,20 @@ export function notifyTrainerAssignments(
       }
     })(),
   );
+}
+
+export function notifyUserWelcome({
+  userId,
+  name,
+  email,
+  role,
+  password,
+}: {
+  userId: string;
+  name: string;
+  email: string;
+  role: Role;
+  password: string;
+}) {
+  runInBackground(sendUserWelcome({ userId, name, email, role, password }));
 }

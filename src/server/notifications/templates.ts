@@ -1,6 +1,14 @@
 import { getAppUrl } from "@/lib/env";
+import { roleHome } from "@/lib/roles";
+import type { Role } from "@prisma/client";
 
 import { formatSessionDateTime } from "./format";
+
+const roleLabel: Record<Role, string> = {
+  ADMIN: "Admin",
+  TRAINER: "Trainer",
+  USER: "Member",
+};
 
 export interface SessionEmailContext {
   id: string;
@@ -163,6 +171,52 @@ export function sessionFullAdminEmail(
 <p>A training session is now full (<strong>${registeredCount}/${capacity}</strong>):</p>
 <ul>${details.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>
 ${linkHtml(url, "Manage session")}`,
+    ),
+  };
+}
+
+export function userWelcomeEmail({
+  name,
+  email,
+  password,
+  role,
+  categoryName,
+}: {
+  name: string;
+  email: string;
+  password: string;
+  role: Role;
+  categoryName?: string | null;
+}) {
+  const loginUrl = `${getAppUrl()}/login`;
+  const dashboardUrl = `${getAppUrl()}${roleHome(role)}`;
+  const roleText = roleLabel[role];
+  const accountLines = [
+    `Email: ${email}`,
+    `Password: ${password}`,
+    `Role: ${roleText}`,
+  ];
+  if (categoryName) accountLines.push(`Category: ${categoryName}`);
+
+  return {
+    subject: "Welcome to Imhotep Soccer Academy",
+    text: [
+      `Hi ${name},`,
+      "",
+      "An account has been created for you. Use these credentials to log in:",
+      "",
+      ...accountLines,
+      "",
+      `Log in: ${loginUrl}`,
+      "",
+      "Keep this email private and change your password after your first login if possible.",
+    ].join("\n"),
+    html: wrapHtml(
+      `<p>Hi ${escapeHtml(name)},</p>
+<p>An account has been created for you. Use these credentials to log in:</p>
+<ul>${accountLines.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>
+${linkHtml(loginUrl, "Log in")}
+<p style="font-size:0.875rem;color:#64748b">Keep this email private. After login you will land on ${escapeHtml(dashboardUrl)}.</p>`,
     ),
   };
 }

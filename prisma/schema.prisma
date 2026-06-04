@@ -40,6 +40,7 @@ enum NotificationType {
   TRAINER_ASSIGNED
   TRAINING_REMINDER
   SESSION_FULL_ADMIN
+  USER_WELCOME
 }
 
 model NotificationLog {
