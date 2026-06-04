@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { AttendanceList } from "@/components/attendance/attendance-list";
 import { TrainerRegisteredList } from "@/components/trainer/trainer-registered-list";
+import {
+  attendanceSectionMessage,
+  canEditAttendance,
+  showAttendanceSection,
+} from "@/lib/attendance";
+import { saveSessionAttendanceFromForm } from "@/server/attendance/actions";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeading } from "@/components/layout/page-heading";
@@ -89,8 +96,17 @@ export default async function TrainerTrainingDetailPage({ params }: PageProps) {
         </CardContent>
       </Card>
 
-      <div className="mt-6">
+      <div className="mt-6 flex flex-col gap-4">
         <TrainerRegisteredList session={session} />
+        {showAttendanceSection(session) ? (
+          <AttendanceList
+            sessionId={session.id}
+            registrations={session.registrations}
+            canEdit={canEditAttendance(session)}
+            lockedMessage={attendanceSectionMessage(session)}
+            saveAction={saveSessionAttendanceFromForm}
+          />
+        ) : null}
       </div>
     </div>
   );

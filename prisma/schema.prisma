@@ -34,6 +34,12 @@ enum RegistrationStatus {
   CANCELLED
 }
 
+enum AttendanceStatus {
+  UNMARKED
+  PRESENT
+  ABSENT
+}
+
 enum NotificationType {
   REGISTRATION_CONFIRMATION
   SESSION_CANCELLED
@@ -63,8 +69,9 @@ model User {
   categoryId   String?
   category     Category? @relation(fields: [categoryId], references: [id])
 
-  registrations   TrainingRegistration[]
-  trainerSessions TrainingTrainer[]
+  registrations    TrainingRegistration[] @relation("UserRegistrations")
+  trainerSessions  TrainingTrainer[]
+  attendanceMarked TrainingRegistration[] @relation("AttendanceMarkedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -149,14 +156,20 @@ model TrainingTrainer {
 }
 
 model TrainingRegistration {
-  id                String             @id @default(cuid())
-  trainingSessionId String
-  trainingSession   TrainingSession    @relation(fields: [trainingSessionId], references: [id], onDelete: Cascade)
-  userId            String
-  user              User               @relation(fields: [userId], references: [id])
-  status            RegistrationStatus @default(REGISTERED)
-  registeredAt      DateTime           @default(now())
+  id                   String             @id @default(cuid())
+  trainingSessionId    String
+  trainingSession      TrainingSession    @relation(fields: [trainingSessionId], references: [id], onDelete: Cascade)
+  userId               String
+  user                 User               @relation("UserRegistrations", fields: [userId], references: [id])
+  status               RegistrationStatus @default(REGISTERED)
+  registeredAt         DateTime           @default(now())
+  attendanceStatus     AttendanceStatus   @default(UNMARKED)
+  attendanceNotes      String?
+  attendanceMarkedAt   DateTime?
+  attendanceMarkedById String?
+  attendanceMarkedBy   User?              @relation("AttendanceMarkedBy", fields: [attendanceMarkedById], references: [id])
 
   @@unique([trainingSessionId, userId])
   @@index([userId])
+  @@index([attendanceMarkedById])
 }

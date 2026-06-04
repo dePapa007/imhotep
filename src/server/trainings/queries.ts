@@ -105,7 +105,17 @@ export async function getSessionWithRegistrations(id: string) {
           id: true,
           userId: true,
           registeredAt: true,
-          user: { select: { id: true, name: true, email: true } },
+          attendanceStatus: true,
+          attendanceNotes: true,
+          attendanceMarkedAt: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              category: { select: { name: true } },
+            },
+          },
         },
         orderBy: { registeredAt: "asc" },
       },

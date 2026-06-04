@@ -152,7 +152,11 @@ export async function getSessionForUser(sessionId: string, userId: string) {
     where: {
       trainingSessionId_userId: { trainingSessionId: sessionId, userId },
     },
-    select: { status: true },
+    select: {
+      status: true,
+      attendanceStatus: true,
+      attendanceNotes: true,
+    },
   });
 
   const isRegistered = registration?.status === "REGISTERED";
@@ -180,6 +184,8 @@ export async function getSessionForUser(sessionId: string, userId: string) {
     canRegister: eligibility.ok,
     cannotRegisterReason: eligibility.ok ? null : eligibility.reason,
     canCancel,
+    attendanceStatus: registration?.attendanceStatus ?? "UNMARKED",
+    attendanceNotes: registration?.attendanceNotes ?? null,
   };
 }
 

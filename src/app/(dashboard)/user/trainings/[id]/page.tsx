@@ -51,7 +51,20 @@ export default async function UserTrainingDetailPage({ params }: PageProps) {
             {session.isRegistered ? (
               <Badge variant="success">Registered</Badge>
             ) : null}
+            {session.isRegistered &&
+            session.attendanceStatus === "PRESENT" ? (
+              <Badge variant="success">You attended</Badge>
+            ) : null}
+            {session.isRegistered && session.attendanceStatus === "ABSENT" ? (
+              <Badge variant="destructive">Marked absent</Badge>
+            ) : null}
           </div>
+          {session.isRegistered && session.attendanceNotes ? (
+            <p className="text-muted-foreground text-sm">
+              <span className="font-medium">Attendance note: </span>
+              {session.attendanceNotes}
+            </p>
+          ) : null}
           {session.description ? (
             <p className="text-sm">{session.description}</p>
           ) : null}

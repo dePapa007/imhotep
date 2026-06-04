@@ -107,6 +107,9 @@ export async function getAssignedSessionForTrainer(
           id: true,
           status: true,
           registeredAt: true,
+          attendanceStatus: true,
+          attendanceNotes: true,
+          attendanceMarkedAt: true,
           user: {
             select: {
               id: true,

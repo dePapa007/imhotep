@@ -2,8 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { AttendanceList } from "@/components/attendance/attendance-list";
 import { AddRegistrationForm } from "@/components/admin/add-registration-form";
 import { RegistrationList } from "@/components/admin/registration-list";
+import {
+  attendanceSectionMessage,
+  canEditAttendance,
+  showAttendanceSection,
+} from "@/lib/attendance";
+import { saveSessionAttendanceFromForm } from "@/server/attendance/actions";
 import { TrainerAssignment } from "@/components/admin/trainer-assignment";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonClasses } from "@/components/ui/button";
@@ -136,6 +143,15 @@ export default async function TrainingDetailPage({ params }: PageProps) {
           availableTrainers={trainers}
         />
         <RegistrationList session={session} />
+        {showAttendanceSection(session) ? (
+          <AttendanceList
+            sessionId={session.id}
+            registrations={session.registrations}
+            canEdit={canEditAttendance(session)}
+            lockedMessage={attendanceSectionMessage(session)}
+            saveAction={saveSessionAttendanceFromForm}
+          />
+        ) : null}
         <AddRegistrationForm
           sessionId={session.id}
           eligibleUsers={eligibleUsers}
