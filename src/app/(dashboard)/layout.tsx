@@ -1,5 +1,6 @@
 import { AppLogo } from "@/components/layout/app-logo";
 import { BottomNav } from "@/components/layout/bottom-nav";
+import { SkipLink } from "@/components/layout/skip-link";
 import { Button } from "@/components/ui/button";
 import { roleHome } from "@/lib/roles";
 import { logout } from "@/server/auth/actions";
@@ -11,8 +12,8 @@ const navByRole: Record<Role, NavItem[]> = {
     { label: "Home", href: "/admin" },
     { label: "Users", href: "/admin/users" },
     { label: "Trainers", href: "/admin/trainers" },
-    { label: "Categories", href: "/admin/categories" },
-    { label: "Trainings", href: "/admin/trainings" },
+    { label: "Cats", href: "/admin/categories" },
+    { label: "Sessions", href: "/admin/trainings" },
   ],
   TRAINER: [
     { label: "Home", href: "/trainer" },
@@ -40,6 +41,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex min-h-dvh flex-col">
+      <SkipLink />
       <header className="border-border bg-card sticky top-0 z-40 border-b">
         <div className="mx-auto flex w-full max-w-md items-center justify-between px-5 py-3">
           <AppLogo href={roleHome(user.role)} size="sm" priority />
@@ -59,7 +61,10 @@ export default async function DashboardLayout({
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-md flex-1 px-5 py-6">
+      <main
+        id="main-content"
+        className="mx-auto w-full max-w-md flex-1 px-5 pt-6 pb-24"
+      >
         {children}
       </main>
 

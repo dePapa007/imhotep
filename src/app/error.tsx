@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 
+import { ErrorState } from "@/components/ui/error-state";
 import { Button } from "@/components/ui/button";
 
 export default function Error({
@@ -16,14 +17,19 @@ export default function Error({
   }, [error]);
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-4 px-5 py-10 text-center">
-      <h1 className="text-xl font-semibold">Something went wrong</h1>
-      <p className="text-muted-foreground text-sm">
-        An unexpected error occurred. Please try again.
-      </p>
-      <Button onClick={() => unstable_retry()} className="w-full sm:w-auto">
-        Try again
-      </Button>
+    <main className="mx-auto w-full max-w-md flex-1">
+      <ErrorState
+        title="Something went wrong"
+        description="An unexpected error occurred. Please try again."
+        action={
+          <Button
+            onClick={() => unstable_retry()}
+            className="w-full sm:w-auto"
+          >
+            Try again
+          </Button>
+        }
+      />
     </main>
   );
 }

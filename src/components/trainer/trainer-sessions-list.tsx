@@ -1,11 +1,24 @@
 import { TrainerSessionCard } from "@/components/trainer/trainer-session-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { groupSessionsByDay } from "@/lib/date-groups";
 import type { ScheduleFilter, TrainerSessionItem } from "@/server/trainer/queries";
 
-const emptyMessages: Record<ScheduleFilter, string> = {
-  upcoming: "No upcoming trainings assigned to you.",
-  past: "No past trainings on your schedule.",
-  cancelled: "No cancelled trainings assigned to you.",
+const emptyMessages: Record<
+  ScheduleFilter,
+  { title: string; description: string }
+> = {
+  upcoming: {
+    title: "No upcoming trainings",
+    description: "You have no upcoming sessions assigned to you.",
+  },
+  past: {
+    title: "No past trainings",
+    description: "Your past assigned sessions will appear here.",
+  },
+  cancelled: {
+    title: "No cancelled trainings",
+    description: "Cancelled sessions assigned to you will appear here.",
+  },
 };
 
 export function TrainerSessionsList({
@@ -16,11 +29,8 @@ export function TrainerSessionsList({
   filter: ScheduleFilter;
 }) {
   if (sessions.length === 0) {
-    return (
-      <p className="text-muted-foreground py-8 text-center text-sm">
-        {emptyMessages[filter]}
-      </p>
-    );
+    const msg = emptyMessages[filter];
+    return <EmptyState title={msg.title} description={msg.description} />;
   }
 
   if (filter === "upcoming") {

@@ -1,4 +1,5 @@
 import { UserTrainingCard } from "@/components/user/user-training-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { groupSessionsByDay } from "@/lib/date-groups";
 import type { UserSessionItem } from "@/server/registrations/queries";
 
@@ -11,9 +12,10 @@ export function AvailableSessionsList({
 
   if (groups.length === 0) {
     return (
-      <p className="text-muted-foreground py-8 text-center text-sm">
-        No upcoming trainings available in your category.
-      </p>
+      <EmptyState
+        title="No trainings available"
+        description="There are no upcoming trainings in your category right now. Check back later."
+      />
     );
   }
 

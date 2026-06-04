@@ -54,7 +54,15 @@ export default async function AdminTrainingsPage({ searchParams }: PageProps) {
         title="Training calendar"
         description="View and manage all scheduled trainings."
       />
-      <SessionsList filters={filters} />
+      <SessionsList
+        filters={filters}
+        range={range}
+        preservedParams={{
+          category: params.category,
+          trainer: params.trainer,
+          status: params.status,
+        }}
+      />
     </div>
   );
 }

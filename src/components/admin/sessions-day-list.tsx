@@ -1,4 +1,5 @@
 import { SessionCard } from "@/components/admin/session-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { groupSessionsByDay } from "@/lib/date-groups";
 import type { SessionListItem } from "@/server/trainings/queries";
 
@@ -7,9 +8,10 @@ export function SessionsDayList({ sessions }: { sessions: SessionListItem[] }) {
 
   if (groups.length === 0) {
     return (
-      <p className="text-muted-foreground py-8 text-center text-sm">
-        No trainings match your filters.
-      </p>
+      <EmptyState
+        title="No trainings found"
+        description="Try adjusting your date range or filters."
+      />
     );
   }
 

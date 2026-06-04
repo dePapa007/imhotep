@@ -5,6 +5,7 @@ import { SessionRangeTabs } from "@/components/admin/session-range-tabs";
 import { SessionsDayList } from "@/components/admin/sessions-day-list";
 import { buttonClasses } from "@/components/ui/button";
 import { listCategories } from "@/server/users/queries";
+import type { RangeType } from "@/lib/date-groups";
 import {
   listActiveTrainers,
   listSessions,
@@ -13,8 +14,12 @@ import {
 
 export async function SessionsList({
   filters,
+  range,
+  preservedParams = {},
 }: {
   filters: ListSessionsFilters;
+  range: RangeType;
+  preservedParams?: Record<string, string | undefined>;
 }) {
   const [sessions, categories, trainers] = await Promise.all([
     listSessions(filters),
@@ -28,7 +33,10 @@ export async function SessionsList({
         New training
       </Link>
 
-      <SessionRangeTabs />
+      <SessionRangeTabs
+        currentRange={range}
+        preservedParams={preservedParams}
+      />
       <SessionFilters categories={categories} trainers={trainers} />
       <SessionsDayList sessions={sessions} />
     </div>

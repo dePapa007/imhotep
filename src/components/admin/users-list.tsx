@@ -3,6 +3,7 @@ import Link from "next/link";
 import { UserCard } from "@/components/admin/user-card";
 import { UserFilters } from "@/components/admin/user-filters";
 import { buttonClasses } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { listUsers, type ListUsersFilters } from "@/server/users/queries";
 
 interface UsersListProps {
@@ -27,9 +28,7 @@ export async function UsersList({
       <UserFilters lockRole={lockRole} />
 
       {users.length === 0 ? (
-        <p className="text-muted-foreground py-8 text-center text-sm">
-          {emptyMessage}
-        </p>
+        <EmptyState title={emptyMessage} />
       ) : (
         <div className="flex flex-col gap-3">
           {users.map((user) => (

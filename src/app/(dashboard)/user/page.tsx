@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { requireRole } from "@/server/auth/dal";
 import {
   getNextRegisteredSession,
@@ -40,15 +41,10 @@ export default async function UserHomePage() {
           title="Welcome"
           description="Your academy home for trainings and registrations."
         />
-        <Card>
-          <CardHeader>
-            <CardTitle>No category assigned</CardTitle>
-            <CardDescription>
-              Ask an administrator to assign you to a category to see eligible
-              trainings.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+        <EmptyState
+          title="No category assigned"
+          description="Ask an administrator to assign you to a category to see eligible trainings."
+        />
       </div>
     );
   }
@@ -86,14 +82,15 @@ export default async function UserHomePage() {
             </div>
           </Card>
         ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>No registrations yet</CardTitle>
-              <CardDescription>
-                Browse available trainings to register for your next session.
-              </CardDescription>
-            </CardHeader>
-          </Card>
+          <EmptyState
+            title="No registrations yet"
+            description="Browse available trainings to register for your next session."
+            action={
+              <Link href="/user/browse" className={buttonClasses()}>
+                Browse trainings
+              </Link>
+            }
+          />
         )}
       </section>
 
@@ -117,9 +114,10 @@ export default async function UserHomePage() {
           </Link>
         </div>
         {preview.length === 0 ? (
-          <p className="text-muted-foreground text-sm">
-            No upcoming trainings in your category right now.
-          </p>
+          <EmptyState
+            title="Nothing available right now"
+            description="No upcoming trainings in your category at the moment."
+          />
         ) : (
           <div className="flex flex-col gap-3">
             {preview.map((session) => (

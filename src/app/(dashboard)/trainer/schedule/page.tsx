@@ -39,7 +39,7 @@ export default async function TrainerSchedulePage({ searchParams }: PageProps) {
         description="Trainings you are assigned to."
       />
       <div className="flex flex-col gap-4">
-        <TrainerScheduleFilters />
+        <TrainerScheduleFilters currentFilter={filter} />
         <TrainerSessionsList sessions={sessions} filter={filter} />
       </div>
     </div>

@@ -10,7 +10,10 @@ export function BottomNav({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
 
   return (
-    <nav className="border-border bg-card sticky bottom-0 z-40 border-t">
+    <nav
+      aria-label="Main navigation"
+      className="border-border bg-card sticky bottom-0 z-40 border-t pb-[env(safe-area-inset-bottom)]"
+    >
       <ul className="mx-auto flex w-full max-w-md items-stretch">
         {items.map((item) => {
           const isActive =
@@ -21,7 +24,7 @@ export function BottomNav({ items }: { items: NavItem[] }) {
                 href={item.href}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "flex flex-col items-center gap-1 py-3 text-xs font-medium transition-colors",
+                  "focus-visible:ring-ring flex flex-col items-center gap-1 py-3 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none",
                   isActive
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground",

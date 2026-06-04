@@ -3,12 +3,7 @@ import type { Metadata } from "next";
 import { SessionRangeTabs } from "@/components/admin/session-range-tabs";
 import { AvailableSessionsList } from "@/components/user/available-sessions-list";
 import { PageHeading } from "@/components/layout/page-heading";
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   getRangeBounds,
   RANGE_VALUES,
@@ -38,14 +33,10 @@ export default async function UserBrowsePage({ searchParams }: PageProps) {
           title="Browse trainings"
           description="Eligible trainings in your category."
         />
-        <Card>
-          <CardHeader>
-            <CardTitle>No category assigned</CardTitle>
-            <CardDescription>
-              Ask an administrator to assign you to a category first.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+        <EmptyState
+          title="No category assigned"
+          description="Ask an administrator to assign you to a category first."
+        />
       </div>
     );
   }
@@ -65,7 +56,7 @@ export default async function UserBrowsePage({ searchParams }: PageProps) {
         description="Upcoming trainings you can register for."
       />
       <div className="flex flex-col gap-4">
-        <SessionRangeTabs />
+        <SessionRangeTabs basePath="/user/browse" currentRange={range} />
         <AvailableSessionsList sessions={sessions} />
       </div>
     </div>

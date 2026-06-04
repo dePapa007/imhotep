@@ -1,12 +1,8 @@
 import Link from "next/link";
 
 import { UserTrainingCard } from "@/components/user/user-training-card";
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { buttonClasses } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { UserSessionItem } from "@/server/registrations/queries";
 
 export function RegisteredSessionsList({
@@ -16,14 +12,15 @@ export function RegisteredSessionsList({
 }) {
   if (sessions.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>No upcoming registrations</CardTitle>
-          <CardDescription>
-            Browse available trainings to register for your next session.
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <EmptyState
+        title="No upcoming registrations"
+        description="Browse available trainings to register for your next session."
+        action={
+          <Link href="/user/browse" className={buttonClasses()}>
+            Browse trainings
+          </Link>
+        }
+      />
     );
   }
 
