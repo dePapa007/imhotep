@@ -6,6 +6,19 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { NavItem } from "@/types";
 
+/** Longest prefix match so role home (/admin) is not active on every sub-route. */
+function getActiveHref(pathname: string, items: NavItem[]): string | null {
+  let best: NavItem | null = null;
+  for (const item of items) {
+    const matches =
+      pathname === item.href || pathname.startsWith(`${item.href}/`);
+    if (matches && (!best || item.href.length > best.href.length)) {
+      best = item;
+    }
+  }
+  return best?.href ?? null;
+}
+
 export function BottomNav({
   items,
   ariaLabel,
@@ -14,6 +27,7 @@ export function BottomNav({
   ariaLabel: string;
 }) {
   const pathname = usePathname();
+  const activeHref = getActiveHref(pathname, items);
 
   return (
     <nav
@@ -22,8 +36,7 @@ export function BottomNav({
     >
       <ul className="mx-auto flex w-full max-w-md items-stretch">
         {items.map((item) => {
-          const isActive =
-            pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const isActive = item.href === activeHref;
           return (
             <li key={item.href} className="flex-1">
               <Link
