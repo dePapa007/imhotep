@@ -141,6 +141,7 @@ See [`.env.example`](.env.example) for the full list. Notification-related vars:
 | -------- | ---------------- | ----------- |
 | `RESEND_API_KEY` | Yes | Resend API key |
 | `EMAIL_FROM` | Yes | e.g. `Imhotep <noreply@imfa.be>` |
+| `CONTACT_EMAIL` | No | Inbox for website contact form (default `info@imfa.be`) |
 | `APP_URL` | Yes | e.g. `https://app.imfa.be` (links in emails) |
 | `CRON_SECRET` | Yes | Protects `GET /api/cron/reminders` |
 | `REMINDER_HOURS_BEFORE` | No | Default `24` |
@@ -169,6 +170,7 @@ Required VPS env vars: `DATABASE_URL`, `SESSION_SECRET`, and notification vars i
 2. Add and verify the `imfa.be` domain in Resend; publish the SPF/DKIM DNS records Resend provides.
 3. Set `EMAIL_FROM` to an address on that domain (e.g. `Imhotep <noreply@imfa.be>`).
 4. Set `RESEND_API_KEY`, `APP_URL`, and `CRON_SECRET` in the VPS environment (alongside existing secrets).
+5. Optional: set `CONTACT_EMAIL` (defaults to `info@imfa.be`) — inbox for website forms (`POST /api/contact`, `POST /api/trials`). The marketing site (`imfa.be`) may live on a different host; it only needs HTTPS access to these endpoints (CORS allows `imfa.be` / `www.imfa.be`).
 
 ### Training reminder cron
 

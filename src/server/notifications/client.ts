@@ -18,17 +18,19 @@ export async function sendRawEmail({
   html,
   text,
   dedupeKey,
+  replyTo,
 }: {
   to: string;
   subject: string;
   html: string;
   text: string;
   dedupeKey?: string;
-}): Promise<void> {
+  replyTo?: string;
+}): Promise<boolean> {
   const client = getResend();
   if (!client) {
-    console.log("[email]", { to, subject, dedupeKey });
-    return;
+    console.log("[email]", { to, subject, dedupeKey, replyTo });
+    return true;
   }
 
   try {
@@ -38,11 +40,15 @@ export async function sendRawEmail({
       subject,
       html,
       text,
+      ...(replyTo ? { replyTo } : {}),
     });
     if (error) {
       console.error("[email] Resend error", { to, subject, dedupeKey, error });
+      return false;
     }
+    return true;
   } catch (error) {
     console.error("[email] failed to send", { to, subject, dedupeKey, error });
+    return false;
   }
 }

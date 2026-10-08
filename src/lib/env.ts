@@ -10,6 +10,7 @@ const envSchema = z.object({
     .default("development"),
   RESEND_API_KEY: z.string().min(1).optional(),
   EMAIL_FROM: z.string().min(1).optional(),
+  CONTACT_EMAIL: z.string().email().optional(),
   APP_URL: z.string().url().optional(),
   CRON_SECRET: z.string().min(32).optional(),
   REMINDER_HOURS_BEFORE: z.coerce.number().int().positive().default(24),
@@ -33,4 +34,8 @@ export function getAppUrl() {
 
 export function getEmailFrom() {
   return env.EMAIL_FROM ?? "Imhotep <noreply@imfa.be>";
+}
+
+export function getContactEmail() {
+  return env.CONTACT_EMAIL ?? "info@imfa.be";
 }
